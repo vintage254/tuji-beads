@@ -8,6 +8,15 @@ const ProductDetails = ({ product, products }) => {
     const [index, setIndex] = useState(0);
     const { decQty, incQty, qty, onAdd } = useStateContext();
 
+    if (!product) {
+        return (
+            <div className="product-error-container">
+                <h1>Product not found</h1>
+                <p>Sorry, the product you're looking for doesn't exist or is no longer available.</p>
+            </div>
+        );
+    }
+
     const { image, name, details, price } = product;
 
     return (
@@ -104,15 +113,30 @@ export const getStaticPaths = async () => {
     };
 }
 
-export const getStaticProps = async ({ params:{slug} }) => {
-    const query = `*[_type == "product" && slug.current == '${slug}'][0]`
-    const product = await client.fetch(query)
+export const getStaticProps = async ({ params: { slug } }) => {
+    try {
+        const query = `*[_type == "product" && slug.current == '${slug}'][0]`;
+        const product = await client.fetch(query);
 
-    const productsQuery = '*[_type == "product"]'
-    const products = await client.fetch(productsQuery)
+        const productsQuery = '*[_type == "product"]';
+        const products = await client.fetch(productsQuery);
 
-    return {
-        props: { product, products }
+        // If product not found, return notFound
+        if (!product) {
+            return {
+                notFound: true
+            };
+        }
+
+        return {
+            props: { product, products },
+            revalidate: 60, // Revalidate every 60 seconds
+        };
+    } catch (error) {
+        console.error('Error fetching product:', error);
+        return {
+            props: { product: null, products: [] }
+        };
     }
 }
 
