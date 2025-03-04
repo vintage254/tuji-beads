@@ -1,5 +1,4 @@
-// This is a placeholder for a real email sending API
-// In a production environment, you would use a service like SendGrid, Mailgun, etc.
+import nodemailer from 'nodemailer';
 
 export default async function handler(req, res) {
   if (req.method !== 'POST') {
@@ -8,30 +7,46 @@ export default async function handler(req, res) {
 
   try {
     const { to, subject, orderDetails } = req.body;
+    
+    // Check if Gmail credentials are configured
+    if (!process.env.GMAIL_USER || !process.env.GMAIL_APP_PASSWORD) {
+      console.warn('Gmail credentials not configured. Email not sent.');
+      return res.status(200).json({ 
+        success: false, 
+        warning: 'Email service not configured. Please set GMAIL_USER and GMAIL_APP_PASSWORD in environment variables.'
+      });
+    }
 
-    // In a real implementation, you would use an email service here
-    // Example with SendGrid:
-    // const sgMail = require('@sendgrid/mail');
-    // sgMail.setApiKey(process.env.SENDGRID_API_KEY);
-    // 
-    // const msg = {
-    //   to,
-    //   from: 'your-verified-sender@example.com',
-    //   subject,
-    //   text: `New order received from ${orderDetails.customer.name}`,
-    //   html: generateOrderEmailHtml(orderDetails),
-    // };
-    // 
-    // await sgMail.send(msg);
+    // Create Gmail transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.GMAIL_USER,
+        pass: process.env.GMAIL_APP_PASSWORD // App password, not your regular Gmail password
+      }
+    });
 
-    console.log(`Email would be sent to: ${to}`);
-    console.log(`Subject: ${subject}`);
-    console.log(`Order details: ${JSON.stringify(orderDetails)}`);
+    // Prepare email message
+    const mailOptions = {
+      from: process.env.GMAIL_USER,
+      to: to,
+      subject: subject,
+      text: `New order received from ${orderDetails.customer.name}`,
+      html: generateOrderEmailHtml(orderDetails),
+    };
 
-    return res.status(200).json({ success: true });
+    // Send email using Gmail
+    const info = await transporter.sendMail(mailOptions);
+    console.log('Email sent successfully to:', to);
+    console.log('Message ID:', info.messageId);
+
+    return res.status(200).json({ success: true, messageId: info.messageId });
   } catch (error) {
     console.error('Error sending email:', error);
-    return res.status(500).json({ message: 'Error sending email', error: error.message });
+    return res.status(500).json({ 
+      message: 'Error sending email', 
+      error: error.message || 'Unknown error'
+    });
   }
 }
 

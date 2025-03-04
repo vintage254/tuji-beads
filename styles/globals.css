@@ -1148,11 +1148,37 @@ margin-top: 160px;
   margin: 0 auto;
 }
 
-.order-history-container h2 {
+.order-history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.order-history-header h2 {
   color: #324d67;
   font-size: 28px;
-  margin-bottom: 20px;
-  text-align: center;
+  margin-bottom: 0;
+}
+
+.refresh-button {
+  background-color: #f02d34;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  padding: 8px 15px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.refresh-button:hover {
+  background-color: #d02d34;
+}
+
+.refresh-button:disabled {
+  background-color: #f88084;
+  cursor: not-allowed;
 }
 
 .loading {
@@ -1202,32 +1228,7 @@ margin-top: 160px;
   color: #324d67;
 }
 
-.order-status {
-  padding: 5px 10px;
-  border-radius: 15px;
-  font-size: 14px;
-  font-weight: 500;
-}
-
-.order-status.pending {
-  background-color: #ffefd5;
-  color: #ff8c00;
-}
-
-.order-status.processing {
-  background-color: #e6f7ff;
-  color: #1890ff;
-}
-
-.order-status.completed {
-  background-color: #f6ffed;
-  color: #52c41a;
-}
-
-.order-status.cancelled {
-  background-color: #fff1f0;
-  color: #f5222d;
-}
+/* All order status styles removed as requested */
 
 .order-items {
   padding: 20px;

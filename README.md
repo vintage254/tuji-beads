@@ -1,28 +1,69 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# Tuji Beads E-Commerce Platform
+
+This is a Next.js e-commerce platform for Tuji Beads, featuring user authentication, product catalog, shopping cart, order management, and email notifications.
+
+## Features
+
+- User authentication with Sanity CMS
+- Product catalog and management
+- Shopping cart functionality
+- Order history and management
+- Email notifications for orders using Gmail
+- Responsive design for mobile and desktop
 
 ## Getting Started
 
-First, run the development server:
+### Prerequisites
+
+- Node.js (v18.19.1 or higher)
+- npm (v9.2.0 or higher)
+- Gmail account for sending order notifications
+
+### Installation
+
+1. Clone the repository
+2. Install dependencies:
+
+```bash
+npm install
+```
+
+3. Set up environment variables:
+   - Copy `.env.sample` to `.env.local`
+   - Fill in your Gmail credentials (see [Email Setup](#email-setup))
+
+4. Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
 Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
+## Email Setup
 
-[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
+This application uses Gmail for sending order notifications. To set it up:
 
-The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
+1. Create a Gmail account or use an existing one
+2. Generate an App Password for your Gmail account:
+   - Go to your [Google Account](https://myaccount.google.com/)
+   - Enable 2-Step Verification if not already enabled
+   - Go to Security > App passwords
+   - Generate a new app password for "Mail" and "Other" (name it "Tuji Beads")
+3. Add your Gmail credentials to `.env.local`:
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+```
+GMAIL_USER=your_gmail_address@gmail.com
+GMAIL_APP_PASSWORD=your_16_character_app_password
+```
+
+4. Test your email configuration:
+
+```bash
+node scripts/test-gmail.js
+```
+
+For more detailed instructions, see [EMAIL_SETUP.md](./EMAIL_SETUP.md).
 
 ## Learn More
 

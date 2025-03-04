@@ -8,9 +8,18 @@ const OrderHistory = () => {
   const [loading, setLoading] = useState(true);
   const { user } = useStateContext();
 
+  // Add a refreshInterval to periodically check for new orders
   useEffect(() => {
     if (user) {
       fetchOrders();
+      
+      // Set up an interval to refresh orders every 30 seconds
+      const refreshInterval = setInterval(() => {
+        fetchOrders();
+      }, 30000);
+      
+      // Clean up the interval when component unmounts
+      return () => clearInterval(refreshInterval);
     }
   }, [user]);
 
@@ -59,7 +68,16 @@ const OrderHistory = () => {
 
   return (
     <div className="order-history-container">
-      <h2>Your Order History</h2>
+      <div className="order-history-header">
+        <h2>Your Order History</h2>
+        <button 
+          className="refresh-button" 
+          onClick={fetchOrders} 
+          disabled={loading}
+        >
+          {loading ? 'Refreshing...' : 'Refresh Orders'}
+        </button>
+      </div>
       
       {loading ? (
         <div className="loading">Loading your orders...</div>
@@ -75,9 +93,7 @@ const OrderHistory = () => {
                 <div className="order-date">
                   <span>Ordered on:</span> {formatDate(order.orderDate)}
                 </div>
-                <div className={`order-status ${order.status}`}>
-                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-                </div>
+                {/* Status display removed as requested */}
               </div>
               
               <div className="order-items">
