@@ -1,13 +1,14 @@
 import React from 'react';
+import { InstagramFeed, WhyChooseUs } from './';
 
 const AboutUs = () => {
   return (
     <div className="about-us-container">
       <div className="about-us-content">
-        <h1>About Beads Charm</h1>
+        <h1>About Tuji Beads</h1>
         <div className="about-us-description">
           <p>
-            Beads Charm is a Nairobi-based e-commerce business specializing in handcrafted beadwork, 
+            Tuji Beads is a Nairobi-based e-commerce business specializing in handcrafted beadwork, 
             offering a unique selection of handmade jewelry, sandals, and accessories.
           </p>
           <p>
@@ -37,6 +38,41 @@ const AboutUs = () => {
           <li><strong>Sustainability:</strong> We support ethical sourcing and production methods.</li>
           <li><strong>Community:</strong> We empower local artisans and preserve cultural heritage.</li>
         </ul>
+      </div>
+      
+      <div className="about-us-team">
+        <h2>Our Team</h2>
+        <p>
+          Behind Tuji Beads is a dedicated team of skilled artisans and designers who are passionate about 
+          preserving traditional Kenyan beadwork while bringing innovative designs to the modern market.
+        </p>
+        <div className="team-members">
+          <div className="team-member">
+            <div className="team-member-image placeholder"></div>
+            <h3>Jane Mwangi</h3>
+            <p>Founder & Lead Designer</p>
+          </div>
+          <div className="team-member">
+            <div className="team-member-image placeholder"></div>
+            <h3>John Kamau</h3>
+            <p>Master Craftsman</p>
+          </div>
+          <div className="team-member">
+            <div className="team-member-image placeholder"></div>
+            <h3>Mary Njeri</h3>
+            <p>Customer Relations</p>
+          </div>
+        </div>
+      </div>
+      
+      <div className="about-us-why-choose">
+        <WhyChooseUs />
+      </div>
+      
+      <div className="about-us-social">
+        <h2>Follow Our Journey</h2>
+        <p>Stay updated with our latest creations and behind-the-scenes moments on Instagram</p>
+        <InstagramFeed />
       </div>
     </div>
   );

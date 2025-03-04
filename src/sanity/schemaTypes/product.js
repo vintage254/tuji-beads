@@ -26,6 +26,26 @@ export default {
         maxLength: 90,
       }
     },
+    {
+      name: 'category',
+      title: 'Category',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Necklaces', value: 'necklaces' },
+          { title: 'Bracelets', value: 'bracelets' },
+          { title: 'Earrings', value: 'earrings' },
+          { title: 'Anklets', value: 'anklets' },
+          { title: 'Rings', value: 'rings' },
+          { title: 'Sandals', value: 'sandals' },
+          { title: 'Home Decor', value: 'home-decor' },
+          { title: 'Accessories', value: 'accessories' },
+          { title: 'Gift Sets', value: 'gift-sets' },
+        ],
+        layout: 'dropdown'
+      },
+      validation: Rule => Rule.required()
+    },
     { 
       name: 'price',
       title: 'Price',
@@ -35,6 +55,20 @@ export default {
       name: 'details',
       title: 'Details',
       type: 'string',
+    },
+    {
+      name: 'featured',
+      title: 'Featured Product',
+      type: 'boolean',
+      description: 'Mark this product as featured to display it prominently',
+      initialValue: false
+    },
+    {
+      name: 'trending',
+      title: 'Trending Product',
+      type: 'boolean',
+      description: 'Mark this product as trending to include it in the trending section',
+      initialValue: false
     }
   ]
 }

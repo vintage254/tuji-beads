@@ -1,22 +1,71 @@
 import React from 'react'
-import{ Product, FooterBanner, HeroBanner } from '../components'
+import { 
+  HeroBanner, 
+  FooterBanner, 
+  Product, 
+  Reviews, 
+  FeaturedCategories,
+  WhyChooseUs,
+  TrendingProducts,
+  Newsletter,
+  InstagramFeed
+} from '../components'
 
 import { client } from '../lib/client';
-import imageUrlBuilder from '@sanity/image-url';
+import Link from 'next/link';
 
-const Home = ( { products, bannerData }) => {
+const Home = ({ products, bannerData }) => {
   return (
-    <div>
-    <HeroBanner heroBanner={bannerData.length && bannerData[0]} />
-    <div className='products-heading'>
-      <h2> best selling products</h2>
-      <p>beads of variouss shapes size and colors </p>
-    </div>
+    <div className="home-container">
+      {/* Hero Banner */}
+      <HeroBanner heroBanner={bannerData.length && bannerData[0]} />
+      
+      {/* Why Choose Us Section */}
+      <section className="home-section">
+        <WhyChooseUs />
+      </section>
+      
+    
+      
+      {/* Trending Products */}
+      <section className="home-section">
+        <TrendingProducts products={products} />
+      </section>
+      
+      {/* Best Selling Products */}
+      <section className="home-section alt-bg">
+        <div className='products-heading'>
+          <h2>Best Selling Products</h2>
+          <p>Beads of various shapes, sizes, and colors</p>
+        </div>
 
-    <div className='products-container'>
-      {products?.map((product) => <Product key={product._id} product={product} />)}
-      </div>
-
+        <div className='products-container'>
+          {products?.slice(0, 4).map((product) => <Product key={product._id} product={product} />)}
+        </div>
+        
+        <div className="view-all-container">
+          <Link href="/products">
+            <button className="view-all-button">View All Products</button>
+          </Link>
+        </div>
+      </section>
+      
+      {/* Customer Reviews */}
+      <section className="home-section">
+        <Reviews />
+      </section>
+      
+      {/* Instagram Feed */}
+      <section className="home-section alt-bg">
+        <InstagramFeed />
+      </section>
+      
+      {/* Newsletter */}
+      <section className="home-section">
+        <Newsletter />
+      </section>
+      
+      {/* Footer Banner */}
       <FooterBanner footerBanner={bannerData && bannerData[0]} />
     </div>
 

@@ -17,8 +17,9 @@ const Navbar = () => {
           </Link>
         </div>
         <div className="nav-links">
-          <div style={{ display: 'flex', gap: '10px' }}>
+          <div style={{ display: 'flex', gap: '15px' }}>
             <Link href="/">Home</Link>
+            <Link href="/products">Products</Link>
             <Link href="/about">About Us</Link>
             {user && (
               <Link href="/order-history">Order History</Link>
