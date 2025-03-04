@@ -5,10 +5,33 @@ const Context = createContext();
 
 export const StateContext = ({ children }) => {
   const [showCart, setShowCart] = useState(false);
+  const [showAuth, setShowAuth] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalQuantities, setTotalQuantities] = useState(0);
   const [qty, setQty] = useState(1);
+  const [user, setUser] = useState(null);
+
+  // Load user from localStorage on initial render
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (error) {
+        console.error('Error parsing stored user:', error);
+      }
+    }
+  }, []);
+
+  // Save user to localStorage whenever it changes
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  }, [user]);
 
   let foundProduct;
   let index;
@@ -77,11 +100,18 @@ export const StateContext = ({ children }) => {
     });
   }
 
+  const logout = () => {
+    setUser(null);
+    toast.success('Logged out successfully');
+  }
+
   return (
     <Context.Provider
       value={{
         showCart,
         setShowCart,
+        showAuth,
+        setShowAuth,
         cartItems,
         totalPrice,
         totalQuantities,
@@ -93,7 +123,10 @@ export const StateContext = ({ children }) => {
         onRemove,
         setCartItems,
         setTotalPrice,
-        setTotalQuantities 
+        setTotalQuantities,
+        user,
+        setUser,
+        logout
       }}
     >
       {children}

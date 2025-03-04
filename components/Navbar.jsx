@@ -1,12 +1,12 @@
 import React from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { AiOutlineShopping } from 'react-icons/ai';
+import { AiOutlineShopping, AiOutlineUser, AiOutlineLogout } from 'react-icons/ai';
 import { useStateContext } from '../context/StateContext';
-import { Cart } from './';
+import { Cart, Authentication } from './';
 
 const Navbar = () => {
-  const { showCart, setShowCart, totalQuantities } = useStateContext();
+  const { showCart, setShowCart, showAuth, setShowAuth, totalQuantities, user, logout } = useStateContext();
   
   return (
     <>
@@ -20,14 +20,37 @@ const Navbar = () => {
           <div style={{ display: 'flex', gap: '10px' }}>
             <Link href="/">Home</Link>
             <Link href="/about">About Us</Link>
+            {user && (
+              <Link href="/order-history">Order History</Link>
+            )}
           </div>
         </div>
-        <button type="button" className="cart-icon" onClick={() => setShowCart(true)}>
-          <AiOutlineShopping />
-          <span className="cart-item-qty">{totalQuantities || 0}</span>
-        </button>
+        <div className="nav-buttons">
+          {user ? (
+            <div className="user-menu">
+              <span className="user-name">
+                <AiOutlineUser />
+                {user.name}
+              </span>
+              <button type="button" className="logout-button" onClick={logout}>
+                <AiOutlineLogout />
+                <span>Logout</span>
+              </button>
+            </div>
+          ) : (
+            <button type="button" className="auth-button" onClick={() => setShowAuth(true)}>
+              <AiOutlineUser />
+              <span>Sign In</span>
+            </button>
+          )}
+          <button type="button" className="cart-icon" onClick={() => setShowCart(true)}>
+            <AiOutlineShopping />
+            <span className="cart-item-qty">{totalQuantities || 0}</span>
+          </button>
+        </div>
       </div>
       {showCart && <Cart />}
+      {showAuth && <Authentication setShowAuth={setShowAuth} />}
     </>
   )
 }

@@ -6,3 +6,6 @@ export { default as Layout } from './Layout';
 export { default as Navbar } from './Navbar';
 export { default as Product } from './Product';
 export { default as WhatsAppButton } from './WhatsAppButton';
+export { default as Authentication } from './authentication';
+export { default as OrderHistory } from './order_history';
+export { default as SignUpInPage } from './sign_up_in_page';
