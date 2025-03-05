@@ -25,56 +25,74 @@ const Authentication = ({ setShowAuth }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     
-    if (isLogin) {
-      // Login logic
-      const query = `*[_type == "user" && email == $email][0]`;
-      const user = await client.fetch(query, { email: formData.email });
-      
-      if (!user) {
-        toast.error('User not found');
-        return;
-      }
-      
-      // In a real app, you would hash and compare passwords
-      // This is a simplified version for demonstration
-      if (user.password !== formData.password) {
-        toast.error('Invalid password');
-        return;
-      }
-      
-      // Login successful
-      setUser(user);
-      toast.success('Login successful!');
-      setShowAuth(false);
-    } else {
-      // Register logic
-      const query = `*[_type == "user" && email == $email][0]`;
-      const existingUser = await client.fetch(query, { email: formData.email });
-      
-      if (existingUser) {
-        toast.error('Email already registered');
-        return;
-      }
-      
-      // Create new user
-      const doc = {
-        _type: 'user',
-        name: formData.name,
-        email: formData.email,
-        password: formData.password, // In a real app, you would hash this
-        phoneNumber: formData.phoneNumber
-      };
-      
-      const result = await client.create(doc);
-      
-      if (result) {
-        // Registration successful
-        setUser(result);
-        toast.success('Registration successful!');
+    try {
+      if (isLogin) {
+        // Login logic
+        const query = `*[_type == "user" && email == $email][0]`;
+        const user = await client.fetch(query, { 
+          email: formData.email 
+        }).catch(error => {
+          console.error('Login fetch error:', error);
+          throw new Error('Failed to authenticate');
+        });
+        
+        if (!user) {
+          toast.error('User not found');
+          return;
+        }
+        
+        // In a real app, you would hash and compare passwords
+        // This is a simplified version for demonstration
+        if (user.password !== formData.password) {
+          toast.error('Invalid password');
+          return;
+        }
+        
+        // Login successful
+        setUser(user);
+        toast.success('Login successful!');
         setShowAuth(false);
       } else {
-        toast.error('Registration failed');
+        // Register logic
+        const query = `*[_type == "user" && email == $email][0]`;
+        const existingUser = await client.fetch(query, { 
+          email: formData.email 
+        }).catch(error => {
+          console.error('Registration check error:', error);
+          throw new Error('Failed to check existing user');
+        });
+        
+        if (existingUser) {
+          toast.error('Email already registered');
+          return;
+        }
+        
+        // Create new user
+        const doc = {
+          _type: 'user',
+          name: formData.name,
+          email: formData.email,
+          password: formData.password, // In a real app, you would hash this
+          phoneNumber: formData.phoneNumber
+        };
+        
+        const result = await client.create(doc).catch(error => {
+          console.error('User creation error:', error);
+          throw new Error('Failed to create user');
+        });
+        
+        if (result) {
+          // Registration successful
+          setUser(result);
+          toast.success('Registration successful!');
+          setShowAuth(false);
+        } else {
+          toast.error('Registration failed');
+        }
       }
+    } catch (error) {
+      console.error('Authentication error:', error);
+      toast.error(error.message || 'Authentication failed');
     }
   };
 
