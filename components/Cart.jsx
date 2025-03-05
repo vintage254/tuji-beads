@@ -34,11 +34,21 @@ const Cart = () => {
     }
     
     try {
+      // Get auth token from cookies
+      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+        const [key, value] = cookie.trim().split('=');
+        acc[key] = value;
+        return acc;
+      }, {});
+      
+      const authToken = cookies['auth_token'];
+      
       // Create order through API route
       const response = await fetch('/api/orders/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': authToken ? `Bearer ${authToken}` : ''
         },
         body: JSON.stringify({
           items: cartItems.map(item => ({
@@ -56,19 +66,24 @@ const Cart = () => {
         throw new Error(error.message || 'Failed to create order');
       }
 
-      const createdOrder = await response.json();
+      const result = await response.json();
       
-      // Clear cart
-      setCartItems([]);
-      setTotalPrice(0);
-      setTotalQuantities(0);
-      
-      // Show success message
-      toast.success('Order placed successfully! We will contact you shortly.');
-      
-      // Close cart and redirect to order history page
-      setShowCart(false);
-      router.push('/order-history');
+      // Check if order was created successfully
+      if (result.success) {
+        // Clear cart
+        setCartItems([]);
+        setTotalPrice(0);
+        setTotalQuantities(0);
+        
+        // Show success message
+        toast.success('Order placed successfully! We will contact you shortly.');
+        
+        // Close cart and redirect to order history page
+        setShowCart(false);
+        router.push('/order-history');
+      } else {
+        throw new Error(result.error || 'Failed to create order');
+      }
       
     } catch (error) {
       console.error('Error creating order:', error);

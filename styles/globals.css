@@ -55,6 +55,35 @@ a {
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
 }
 
+/* Media Queries for Responsive Design */
+@media screen and (max-width: 768px) {
+  .navbar-container {
+    padding: 10px;
+    margin: 6px 10px;
+  }
+  
+  .desktop-nav {
+    display: none;
+  }
+  
+  .mobile-menu-toggle {
+    display: block;
+  }
+  
+  .mobile-nav {
+    display: block;
+  }
+  
+  .logo {
+    padding-left: 10px;
+  }
+  
+  .logo img {
+    width: 100px;
+    height: auto;
+  }
+}
+
 .logo{
   color: gray;
   font-size: 18px;
@@ -127,6 +156,104 @@ span.text-red {
   background-color: rgba(240, 45, 52, 0.05);
 }
 
+/* Mobile menu toggle button */
+.mobile-menu-toggle {
+  display: none;
+  margin-right: 15px;
+}
+
+.mobile-menu-toggle button {
+  background: transparent;
+  border: none;
+  color: #324d67;
+  cursor: pointer;
+  padding: 5px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Mobile Navigation */
+.mobile-nav {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100vh;
+  background-color: #fff;
+  z-index: 1000;
+  padding: 20px;
+  transform: translateX(-100%);
+  transition: transform 0.3s ease-in-out;
+  overflow-y: auto;
+}
+
+.mobile-nav.open {
+  transform: translateX(0);
+}
+
+.mobile-nav-links {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  margin-top: 60px;
+}
+
+.mobile-nav-links a {
+  color: #324d67;
+  font-weight: 500;
+  font-size: 18px;
+  padding: 10px 0;
+  border-bottom: 1px solid #f5f5f5;
+}
+
+.mobile-nav-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  margin-top: 30px;
+}
+
+.user-menu-mobile {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.user-name-mobile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 500;
+  color: #324d67;
+}
+
+.auth-button-mobile,
+.logout-button-mobile,
+.cart-icon-mobile {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  font-size: 16px;
+  color: #324d67;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  width: 100%;
+  justify-content: flex-start;
+}
+
+.auth-button-mobile:hover,
+.logout-button-mobile:hover,
+.cart-icon-mobile:hover {
+  background-color: rgba(240, 45, 52, 0.05);
+  color: #f02d34;
+}
+
 .cart-icon{
   font-size: 25px;
   color: #324d67;
@@ -144,6 +271,65 @@ span.text-red {
   transform: scale(1.1,1.1);
   color: #f02d34;
   background-color: rgba(240, 45, 52, 0.05);
+}
+
+.nav-buttons {
+  display: flex;
+  align-items: center;
+}
+
+.user-menu {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  margin-right: 15px;
+}
+
+.user-name {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-weight: 500;
+  color: #324d67;
+}
+
+.auth-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #324d67;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  margin-right: 15px;
+}
+
+.auth-button:hover {
+  background-color: rgba(240, 45, 52, 0.05);
+  color: #f02d34;
+}
+
+.logout-button {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: transparent;
+  border: none;
+  padding: 8px 15px;
+  border-radius: 8px;
+  font-weight: 500;
+  color: #324d67;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.logout-button:hover {
+  background-color: rgba(240, 45, 52, 0.05);
+  color: #f02d34;
 }
 
 .cart-item-qty{
@@ -347,6 +533,13 @@ text-align: end;
   padding: 40px 10px;
   position: relative;
   overflow-y: auto;
+}
+
+@media screen and (max-width: 768px) {
+  .cart-container {
+    width: 100%;
+    padding: 30px 10px;
+  }
 }
 
 .empty-cart{
@@ -1283,7 +1476,7 @@ margin-top: 160px;
   padding: 60px 20px;
   background-color: #f5f5f5;
   border-radius: 15px;
-  background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('/beads-bg.jpg');
+  background-image: linear-gradient(rgba(255, 255, 255, 0.8), rgba(255, 255, 255, 0.8)), url('/assets/images/beads-bg.jpg');
   background-size: cover;
   background-position: center;
 }
@@ -1608,42 +1801,119 @@ margin-top: 160px;
 }
 
 /* WhatsApp Button Styles */
-.whatsapp-button {
+.whatsapp-button-container {
   position: fixed;
   bottom: 30px;
-  left: 30px;
+  right: 30px;
+  z-index: 999;
+  opacity: 0;
+  transform: scale(0.8) translateY(20px);
+  transition: all 0.5s cubic-bezier(0.68, -0.55, 0.27, 1.55);
+}
+
+.whatsapp-button-container.visible {
+  opacity: 1;
+  transform: scale(1) translateY(0);
+}
+
+.whatsapp-button.modern {
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
   background-color: #25D366;
   color: white;
-  padding: 12px 20px;
+  padding: 14px 24px;
+  border: none;
   border-radius: 50px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 6px 16px rgba(37, 211, 102, 0.3);
   cursor: pointer;
-  z-index: 999;
+  overflow: hidden;
   transition: all 0.3s ease;
 }
 
-.whatsapp-button:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+.whatsapp-button-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  position: relative;
+  z-index: 2;
 }
 
-.whatsapp-button span {
+.whatsapp-icon {
+  font-size: 20px;
+  transition: transform 0.3s ease;
+}
+
+.whatsapp-text {
   font-weight: 600;
   font-size: 14px;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.whatsapp-button.modern:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(45deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 100%);
+  z-index: 1;
+}
+
+.whatsapp-button.modern.hovered {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(37, 211, 102, 0.4);
+}
+
+.whatsapp-button.modern.hovered .whatsapp-icon {
+  transform: rotate(-10deg) scale(1.2);
+}
+
+.whatsapp-pulse {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  border-radius: 50%;
+  background-color: rgba(37, 211, 102, 0.6);
+  opacity: 0;
+  transform: scale(0.5);
+  animation: pulse 2s infinite;
+  pointer-events: none;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(0.5);
+    opacity: 0;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
 }
 
 @media screen and (max-width: 600px) {
-  .whatsapp-button {
+  .whatsapp-button-container {
     bottom: 20px;
-    left: 20px;
-    padding: 10px 16px;
+    right: 20px;
   }
   
-  .whatsapp-button span {
-    font-size: 12px;
+  .whatsapp-button.modern {
+    padding: 12px 20px;
+  }
+  
+  .whatsapp-text {
+    font-size: 13px;
+  }
+  
+  .whatsapp-icon {
+    font-size: 18px;
   }
 }
 

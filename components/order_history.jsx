@@ -47,7 +47,17 @@ const OrderHistory = ({ userId }) => {
 
       try {
         setLoading(true);
-        const response = await fetch(`/api/orders?userId=${userId}`);
+        // Get the auth token from cookies
+        const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+          const [key, value] = cookie.trim().split('=');
+          acc[key] = value;
+          return acc;
+        }, {});
+        
+        const authToken = cookies['auth_token'];
+        const headers = authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
+        
+        const response = await fetch(`/api/orders?userId=${userId}`, { headers });
         
         if (!response.ok) {
           throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);
@@ -128,10 +138,10 @@ const OrderHistory = ({ userId }) => {
                 <div className="item-details">
                   <h4>{item.product?.name || 'Product'}</h4>
                   <p>Quantity: {item.quantity}</p>
-                  <p>Price: KSH {item.product?.price || 0}</p>
+                  <p>Price: KSH {item.price || item.product?.price || 0}</p>
                 </div>
-                {item.product && (
-                  <Link href={`/product/${item.product.slug?.current || '#'}`}>
+                {item.product && item.product._id && (
+                  <Link href={`/product/${item.product._id}`}>
                     <button className="view-product">View Product</button>
                   </Link>
                 )}
@@ -140,7 +150,7 @@ const OrderHistory = ({ userId }) => {
           </div>
           
           <div className="order-footer">
-            <p className="order-total">Total: KSH {order.total || 'N/A'}</p>
+            <p className="order-total">Total: KSH {order.totalAmount || 'N/A'}</p>
           </div>
         </div>
       ))}

@@ -1,6 +1,6 @@
 import { client } from '../../../lib/client';
 import { NextResponse } from 'next/server';
-import { getTokenFromRequest } from '../../../lib/auth';
+import { isAuthenticated, verifyToken } from '../../../lib/auth';
 
 // Set this route to be dynamically rendered
 export const dynamic = 'force-dynamic';
@@ -10,42 +10,29 @@ export const runtime = 'edge';
 
 export async function GET(request) {
   try {
-    // Get the user ID from the query parameter or from the authorization header
+    // Get the user ID from the query parameter
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     
-    // Get token from Authorization header
-    const authHeader = request.headers.get('Authorization');
-    let token = null;
+    // Authenticate the user
+    const authUser = await isAuthenticated(request);
     
-    if (authHeader && authHeader.startsWith('Bearer ')) {
-      token = authHeader.split(' ')[1];
+    if (!authUser) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
     }
     
-    // If no userId in query params, try to get it from the token
-    let userIdToUse = userId;
+    // If no userId in query params, use the one from the token
+    let userIdToUse = userId || authUser.userId;
     
-    if (!userIdToUse && token) {
-      try {
-        // Use the jose library to verify and decode the token
-        const { verifyToken } = await import('../../../lib/auth');
-        const decoded = await verifyToken(token);
-        
-        if (decoded && decoded.userId) {
-          userIdToUse = decoded.userId;
-        } else {
-          // If token is valid but doesn't contain userId
-          return NextResponse.json(
-            { error: 'User ID is required' },
-            { status: 400 }
-          );
-        }
-      } catch (error) {
-        return NextResponse.json(
-          { error: 'Invalid token' },
-          { status: 401 }
-        );
-      }
+    // Admin can view any user's orders, regular users can only view their own
+    if (authUser.role !== 'admin' && authUser.userId !== userIdToUse) {
+      return NextResponse.json(
+        { error: 'Unauthorized to view these orders' },
+        { status: 403 }
+      );
     }
     
     if (!userIdToUse) {
@@ -57,19 +44,20 @@ export async function GET(request) {
 
     // Query for orders
     const orders = await client.fetch(
-      `*[_type == "order" && userId == $userId] | order(createdAt desc) {
+      `*[_type == "order" && user._ref == $userId] | order(_createdAt desc) {
         _id,
-        orderNumber,
-        createdAt,
+        _createdAt,
         status,
-        total,
-        items[] {
-          _id,
+        totalAmount,
+        orderItems[] {
           product->{
+            _id,
             name,
-            price
+            price,
+            image
           },
-          quantity
+          quantity,
+          price
         }
       }`,
       { userId: userIdToUse }

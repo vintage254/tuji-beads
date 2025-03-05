@@ -11,16 +11,50 @@ export async function POST(request) {
     const authUser = await isAuthenticated(request);
     
     if (!authUser) {
+      console.error('Authentication failed: No valid user found');
       return NextResponse.json(
         { error: 'Authentication required' },
         { status: 401 }
       );
     }
     
-    const { items, totalAmount, userId } = await request.json();
+    // Log authentication success
+    console.log('User authenticated:', authUser.userId);
+    
+    let requestData;
+    try {
+      requestData = await request.json();
+    } catch (parseError) {
+      console.error('Failed to parse request body:', parseError);
+      return NextResponse.json(
+        { error: 'Invalid request body' },
+        { status: 400 }
+      );
+    }
+    
+    const { items, totalAmount, userId } = requestData;
+    
+    // Validate required fields
+    if (!items || !Array.isArray(items) || items.length === 0) {
+      return NextResponse.json(
+        { error: 'Order must contain at least one item' },
+        { status: 400 }
+      );
+    }
+    
+    if (!totalAmount) {
+      return NextResponse.json(
+        { error: 'Total amount is required' },
+        { status: 400 }
+      );
+    }
+    
+    // Use the authenticated user's ID if userId is not provided
+    const userIdToUse = userId || authUser.userId;
     
     // Verify that the authenticated user is creating their own order
-    if (authUser.userId !== userId && authUser.role !== 'admin') {
+    if (authUser.userId !== userIdToUse && authUser.role !== 'admin') {
+      console.error('Authorization failed: User tried to create order for another user');
       return NextResponse.json(
         { error: 'Unauthorized to create order for another user' },
         { status: 403 }
@@ -32,7 +66,7 @@ export async function POST(request) {
       _type: 'order',
       user: {
         _type: 'reference',
-        _ref: userId
+        _ref: userIdToUse
       },
       orderItems: items.map(item => ({
         product: {
@@ -46,35 +80,64 @@ export async function POST(request) {
       status: 'pending',
       orderDate: new Date().toISOString()
     };
+    
+    console.log('Creating order document:', JSON.stringify(orderDoc, null, 2));
 
     // Create order in Sanity
-    const createdOrder = await client.create(orderDoc);
-
-    // Try to send email notification
+    let createdOrder;
     try {
-      await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/send-order-email`, {
-        method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${request.headers.get('Authorization')?.split(' ')[1] || ''}` 
-        },
-        body: JSON.stringify({
-          orderId: createdOrder._id,
-          items,
-          totalAmount,
-          userId
-        })
-      });
-    } catch (emailError) {
-      console.error('Failed to send email notification:', emailError);
-      // Continue even if email fails
+      createdOrder = await client.create(orderDoc);
+      console.log('Order created successfully:', createdOrder._id);
+    } catch (createError) {
+      console.error('Failed to create order in Sanity:', createError);
+      return NextResponse.json(
+        { error: 'Failed to create order in database' },
+        { status: 500 }
+      );
     }
 
-    return NextResponse.json(createdOrder);
+    // Try to send email notification if BASE_URL is defined
+    if (process.env.NEXT_PUBLIC_BASE_URL) {
+      try {
+        const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/send-order-email`, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': request.headers.get('Authorization') || ''
+          },
+          body: JSON.stringify({
+            orderId: createdOrder._id,
+            items,
+            totalAmount,
+            userId: userIdToUse
+          })
+        });
+        
+        if (!emailResponse.ok) {
+          console.warn('Email notification returned non-OK response:', await emailResponse.text());
+        }
+      } catch (emailError) {
+        console.error('Failed to send email notification:', emailError);
+        // Continue even if email fails
+      }
+    } else {
+      console.log('Skipping email notification: NEXT_PUBLIC_BASE_URL not defined');
+    }
+
+    return NextResponse.json({
+      success: true,
+      message: 'Order created successfully',
+      order: {
+        _id: createdOrder._id,
+        totalAmount,
+        status: 'pending',
+        createdAt: new Date().toISOString()
+      }
+    });
   } catch (error) {
     console.error('Error creating order:', error);
     return NextResponse.json(
-      { error: 'Failed to create order' },
+      { error: 'Failed to create order', message: error.message },
       { status: 500 }
     );
   }
