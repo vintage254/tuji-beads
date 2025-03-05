@@ -3,47 +3,29 @@
 import React, { useState, useEffect } from 'react';
 import { OrderHistory } from '../../components';
 import { Toaster } from 'react-hot-toast';
-import { StateContext } from '../../context/StateContext';
-import toast from 'react-hot-toast';
+import { useStateContext } from '../../context/StateContext';
 import { useRouter } from 'next/navigation';
+import toast from 'react-hot-toast';
+
+// Set this page to be dynamically rendered
+export const dynamic = 'force-dynamic';
 
 const OrderHistoryPage = () => {
   const [isClient, setIsClient] = useState(false);
+  const { user, isAuthenticated } = useStateContext();
   const router = useRouter();
 
   useEffect(() => {
     setIsClient(true);
-  }, []);
-
-  // Handle client-side rendering only
-  if (!isClient) {
-    return (
-      <div className="loading-container">
-        <div className="loading"></div>
-      </div>
-    );
-  }
-
-  return (
-    <StateContext>
-      <OrderHistoryContent router={router} />
-    </StateContext>
-  );
-};
-
-// Separate component that uses context
-const OrderHistoryContent = ({ router }) => {
-  const { user, isAuthenticated } = useStateContext();
-  
-  useEffect(() => {
+    
     // Redirect to home if not authenticated
-    if (!isAuthenticated()) {
+    if (isClient && !isAuthenticated()) {
       toast.error('Please login to view your order history');
       router.push('/');
     }
-  }, [isAuthenticated, router]);
+  }, [isClient, isAuthenticated, router]);
 
-  if (!isAuthenticated()) {
+  if (!isClient || !isAuthenticated()) {
     return (
       <div className="loading-container">
         <div className="loading"></div>

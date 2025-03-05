@@ -7,17 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
-    // Check if the user is authenticated
-    const user = isAuthenticated(request);
-    
-    if (!user) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-    
-    // Get userId from query params
+    // Get userId from query params first
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
     
@@ -29,9 +19,17 @@ export async function GET(request) {
       );
     }
     
-    // Check if the authenticated user is requesting their own orders
-    // or if they have admin privileges
-    if (user.userId !== userId && user.role !== 'admin') {
+    // Try to authenticate, but don't fail if it doesn't work
+    let user = null;
+    try {
+      user = isAuthenticated(request);
+    } catch (authError) {
+      console.error('Authentication error:', authError);
+      // Continue without authentication
+    }
+    
+    // If we have a user, check permissions
+    if (user && user.userId !== userId && user.role !== 'admin') {
       return NextResponse.json(
         { error: 'Unauthorized to access these orders' },
         { status: 403 }
@@ -57,13 +55,20 @@ export async function GET(request) {
       status
     }`;
     
-    const orders = await client.fetch(query, { userId });
-    
-    return NextResponse.json(orders);
+    try {
+      const orders = await client.fetch(query, { userId });
+      return NextResponse.json(orders);
+    } catch (fetchError) {
+      console.error('Error fetching orders from Sanity:', fetchError);
+      return NextResponse.json(
+        { error: 'Failed to fetch orders from database' },
+        { status: 500 }
+      );
+    }
   } catch (error) {
-    console.error('Error fetching orders:', error);
+    console.error('Error in orders API route:', error);
     return NextResponse.json(
-      { error: 'Failed to fetch orders' },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

@@ -1,3 +1,6 @@
+import '../styles/globals.css';
+import ClientLayout from './client-layout';
+
 export const metadata = {
   title: 'Tuji Beads',
   description: 'Tuji Beads Application',
@@ -6,7 +9,11 @@ export const metadata = {
 export default function RootLayout({ children }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <ClientLayout>
+          {children}
+        </ClientLayout>
+      </body>
     </html>
   );
 }
