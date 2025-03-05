@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { client, urlFor } from '../../lib/client';
+import Image from 'next/image';
 import { AiOutlineMinus, AiOutlinePlus, AiFillStar, AiOutlineStar } from 'react-icons/ai';
 import { Product } from '../../components';
 import { useStateContext } from '../../context/StateContext';
@@ -12,7 +13,7 @@ const ProductDetails = ({ product, products }) => {
         return (
             <div className="product-error-container">
                 <h1>Product not found</h1>
-                <p>Sorry, the product you're looking for doesn't exist or is no longer available.</p>
+                <p>Don&apos;t see what you&apos;re looking for?</p>
             </div>
         );
     }
@@ -24,20 +25,24 @@ const ProductDetails = ({ product, products }) => {
             <div className="product-detail-container">
                 <div>
                     <div className="image-container">
-                        <img 
-                            src={urlFor(image && image[index])} 
-                            className="product-detail-image" 
+                        <Image 
+                            src={urlFor(image && image[index]).url()} 
                             alt={name} 
+                            width={400}
+                            height={400}
+                            className="product-detail-image" 
                         />
                     </div>
                     <div className="small-images-container">
                         {image?.map((item, i) => (
-                            <img 
+                            <Image 
                                 key={i} 
-                                src={urlFor(item)}
+                                src={urlFor(item).url()}
+                                alt={`Product ${i+1}`} 
+                                width={200}
+                                height={200}
                                 className={i === index ? 'small-image selected-image' : 'small-image'}
                                 onMouseEnter={() => setIndex(i)}
-                                alt={`${name} image ${i+1}`} 
                             />
                         ))}
                     </div>

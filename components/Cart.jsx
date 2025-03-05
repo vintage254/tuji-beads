@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { AiOutlineMinus, AiOutlinePlus, AiOutlineLeft, AiOutlineShopping } from 'react-icons/ai';
 import { TiDeleteOutline } from 'react-icons/ti';
 import toast from 'react-hot-toast';
+import Image from 'next/image';
 
 import { useStateContext } from '../context/StateContext';
 import { urlFor, client } from '../lib/client';
@@ -131,6 +132,7 @@ const Cart = () => {
           <div className="empty-cart">
             <AiOutlineShopping size={150} />
             <h3>Your shopping cart is empty</h3>
+            <p>You haven&apos;t added any items to your cart yet.</p>
             <Link href="/">
               <button
                 type="button"
@@ -146,7 +148,13 @@ const Cart = () => {
         <div className="product-container">
           {cartItems.length >= 1 && cartItems.map((item) => (
             <div className="product" key={item._id}>
-              <img src={urlFor(item?.image[0])} className="cart-product-image" />
+              <Image 
+                src={urlFor(item?.image[0])} 
+                alt={item?.name}
+                width={150}
+                height={150}
+                className="cart-product-image"
+              />
               <div className="item-desc">
                 <div className="flex top">
                   <h5>{item.name}</h5>

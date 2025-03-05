@@ -1,4 +1,4 @@
-export default {
+const order = {
   name: 'order',
   title: 'Order',
   type: 'document',
@@ -8,11 +8,10 @@ export default {
       title: 'User',
       type: 'reference',
       to: [{ type: 'user' }],
-      validation: Rule => Rule.required()
     },
     {
-      name: 'orderItems',
-      title: 'Order Items',
+      name: 'items',
+      title: 'Items',
       type: 'array',
       of: [
         {
@@ -22,32 +21,21 @@ export default {
               name: 'product',
               title: 'Product',
               type: 'reference',
-              to: [{ type: 'product' }]
+              to: [{ type: 'product' }],
             },
             {
               name: 'quantity',
               title: 'Quantity',
-              type: 'number'
+              type: 'number',
             },
-            {
-              name: 'price',
-              title: 'Price',
-              type: 'number'
-            }
-          ]
-        }
-      ]
+          ],
+        },
+      ],
     },
     {
       name: 'totalAmount',
       title: 'Total Amount',
-      type: 'number'
-    },
-    {
-      name: 'orderDate',
-      title: 'Order Date',
-      type: 'datetime',
-      initialValue: () => new Date().toISOString()
+      type: 'number',
     },
     {
       name: 'status',
@@ -57,11 +45,18 @@ export default {
         list: [
           { title: 'Pending', value: 'pending' },
           { title: 'Processing', value: 'processing' },
-          { title: 'Completed', value: 'completed' },
-          { title: 'Cancelled', value: 'cancelled' }
-        ]
+          { title: 'Shipped', value: 'shipped' },
+          { title: 'Delivered', value: 'delivered' },
+          { title: 'Cancelled', value: 'cancelled' },
+        ],
       },
-      initialValue: 'pending'
-    }
-  ]
-}
+    },
+    {
+      name: 'createdAt',
+      title: 'Created At',
+      type: 'datetime',
+    },
+  ],
+};
+
+export default order;

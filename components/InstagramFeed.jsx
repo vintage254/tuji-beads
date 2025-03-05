@@ -53,38 +53,38 @@ const InstagramFeed = () => {
     },
   ];
 
-  useEffect(() => {
-    const fetchInstagramPosts = async () => {
-      try {
-        setLoading(true);
-        
-        // Fetch Instagram posts from our API endpoint
-        const response = await fetch('/api/instagram-feed');
-        
-        if (!response.ok) {
-          throw new Error('Failed to fetch Instagram posts');
-        }
-        
-        const data = await response.json();
-        
-        if (data && data.posts && data.posts.length > 0) {
-          setPosts(data.posts);
-        } else {
-          // Use fallback posts if the API returns empty data
-          setPosts(fallbackPosts);
-        }
-      } catch (err) {
-        console.error('Error fetching Instagram posts:', err);
-        setError(err.message);
-        // Use fallback posts if there's an error
-        setPosts(fallbackPosts);
-      } finally {
-        setLoading(false);
+  const fetchInstagramPosts = async () => {
+    try {
+      // Fetch Instagram posts from our API endpoint
+      const response = await fetch('/api/instagram-feed');
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch Instagram posts');
       }
-    };
-    
-    fetchInstagramPosts();
-  }, []);
+      
+      const data = await response.json();
+      
+      if (data && data.posts && data.posts.length > 0) {
+        setPosts(data.posts);
+      } else {
+        // Use fallback posts if the API returns empty data
+        setPosts(fallbackPosts);
+      }
+    } catch (err) {
+      console.error('Error fetching Instagram posts:', err);
+      setError(err.message);
+    }
+  };
+
+  useEffect(() => {
+    setLoading(true);
+    fetchInstagramPosts().catch(() => {
+      setPosts(fallbackPosts);
+      setError(true);
+    }).finally(() => {
+      setLoading(false);
+    });
+  }, [fallbackPosts]);
   
   // Format date to a readable format
   const formatDate = (dateString) => {
@@ -107,7 +107,7 @@ const InstagramFeed = () => {
         </div>
       ) : error ? (
         <div className="instagram-error">
-          <p>Couldn't load Instagram feed. Check out our page directly!</p>
+          <p>We&apos;re having trouble loading Instagram posts.</p>
         </div>
       ) : (
         <div className="instagram-grid">

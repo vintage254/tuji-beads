@@ -1,7 +1,10 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { client, urlFor } from '../lib/client';
 import { useStateContext } from '../context/StateContext';
 import { toast } from 'react-hot-toast';
+import Image from 'next/image';
 
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
@@ -44,6 +47,10 @@ const OrderHistory = () => {
     }
   };
 
+  useEffect(() => {
+    fetchOrders();
+  }, [fetchOrders]);
+
   const formatDate = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleDateString('en-US', {
@@ -83,7 +90,7 @@ const OrderHistory = () => {
         <div className="loading">Loading your orders...</div>
       ) : orders.length === 0 ? (
         <div className="no-orders">
-          <p>You haven't placed any orders yet</p>
+          <p>You haven&apos;t placed any orders yet.</p>
         </div>
       ) : (
         <div className="orders-list">
@@ -101,7 +108,13 @@ const OrderHistory = () => {
                   <div key={index} className="order-item">
                     <div className="item-image">
                       {item.product.image && (
-                        <img src={urlFor(item.product.image[0])} alt={item.product.name} />
+                        <Image 
+                          src={urlFor(item.product.image[0])}
+                          alt={item.product.name}
+                          width={100}
+                          height={100}
+                          className="order-product-image"
+                        />
                       )}
                     </div>
                     <div className="item-details">

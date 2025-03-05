@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Product } from './';
 import { AiOutlineFire, AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import Link from 'next/link';
 const TrendingProducts = ({ products }) => {
   // In a real app, you might have a "trending" flag in your database
   // For now, we'll just use the first few products
-  const trendingProducts = products?.slice(0, 8) || [];
+  const trendingProducts = useMemo(() => products?.filter(product => product.trending), [products]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleProducts, setVisibleProducts] = useState([]);
   const [productsPerSlide, setProductsPerSlide] = useState(4);
@@ -64,12 +64,10 @@ const TrendingProducts = ({ products }) => {
   
   // Auto-scroll the carousel
   useEffect(() => {
-    const interval = setInterval(() => {
-      nextSlide();
-    }, 5000); // Change slide every 5 seconds
+    const interval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
     
     return () => clearInterval(interval);
-  }, [currentIndex]);
+  }, [nextSlide]);
 
   return (
     <div className="trending-products">

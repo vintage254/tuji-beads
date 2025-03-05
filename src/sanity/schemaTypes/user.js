@@ -1,4 +1,4 @@
-export default {
+const user = {
   name: 'user',
   title: 'User',
   type: 'document',
@@ -53,4 +53,6 @@ export default {
       initialValue: () => new Date().toISOString()
     }
   ]
-}
+};
+
+export default user;
