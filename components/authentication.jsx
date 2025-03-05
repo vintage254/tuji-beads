@@ -20,14 +20,12 @@ const Authentication = ({ setShowAuth }) => {
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/auth', {
+      const response = await fetch('/api/auth/login', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: email.trim(),
-          password
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ 
+          email: email.trim(), 
+          password 
         })
       });
 
@@ -41,11 +39,10 @@ const Authentication = ({ setShowAuth }) => {
       localStorage.setItem('user', JSON.stringify(data));
       toast.success('Login successful!');
       setShowAuth(false);
-      router.refresh();
     } catch (err) {
       console.error('Authentication error:', err);
-      setError(err.message || 'An error occurred during authentication');
-      toast.error(err.message || 'Authentication failed');
+      setError(err.message);
+      toast.error(err.message);
     } finally {
       setIsLoading(false);
     }
