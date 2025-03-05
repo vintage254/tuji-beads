@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AiOutlineInstagram, AiOutlineLoading3Quarters } from 'react-icons/ai';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -53,7 +53,7 @@ const InstagramFeed = () => {
     },
   ], []);
 
-  const fetchInstagramPosts = useCallback(async () => {
+  const fetchInstagramPosts = async () => {
     try {
       const response = await fetch('/api/instagram-feed');
       
@@ -73,7 +73,7 @@ const InstagramFeed = () => {
       setError(err.message);
       setPosts(fallbackPosts);
     }
-  }, [fallbackPosts]);
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -83,7 +83,7 @@ const InstagramFeed = () => {
     }).finally(() => {
       setLoading(false);
     });
-  }, [fetchInstagramPosts, fallbackPosts]);
+  }, [fallbackPosts]);
   
   // Format date to a readable format
   const formatDate = (dateString) => {

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Product } from './';
 import { AiOutlineFire, AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import Link from 'next/link';
@@ -8,7 +8,7 @@ import Link from 'next/link';
 const TrendingProducts = ({ products }) => {
   // In a real app, you might have a "trending" flag in your database
   // For now, we'll just use the first few products
-  const trendingProducts = useMemo(() => products?.filter(product => product.trending), [products]);
+  const trendingProducts = useMemo(() => products?.filter(product => product.trending) || [], [products]);
   const [currentIndex, setCurrentIndex] = useState(0);
   const [visibleProducts, setVisibleProducts] = useState([]);
   const [productsPerSlide, setProductsPerSlide] = useState(4);
@@ -38,44 +38,57 @@ const TrendingProducts = ({ products }) => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
   
-  // Update visible products when currentIndex or productsPerSlide changes
-  useEffect(() => {
-    if (trendingProducts.length > 0) {
-      updateVisibleProducts(currentIndex);
-    }
-  }, [currentIndex, productsPerSlide, trendingProducts, updateVisibleProducts]);
-
-  const updateVisibleProducts = useCallback((index) => {
+  // Function to update visible products
+  const updateVisibleProducts = (index) => {
+    if (!trendingProducts || trendingProducts.length === 0) return;
+    
     const start = index;
-    const end = (start + productsPerSlide) % trendingProducts.length;
+    const end = (start + productsPerSlide) % Math.max(trendingProducts.length, 1);
+    
     setVisibleProducts(
       end > start
         ? trendingProducts.slice(start, end)
         : [...trendingProducts.slice(start), ...trendingProducts.slice(0, end)]
     );
-  }, [trendingProducts, productsPerSlide]);
+  };
 
-  const nextSlide = useCallback(() => {
+  // Function to go to next slide
+  const nextSlide = () => {
+    if (!trendingProducts || trendingProducts.length === 0) return;
+    
     const newIndex = (currentIndex + 1) % trendingProducts.length;
     setCurrentIndex(newIndex);
     updateVisibleProducts(newIndex);
-  }, [currentIndex, trendingProducts.length, updateVisibleProducts]);
+  };
 
+  // Function to go to previous slide
   const prevSlide = () => {
+    if (!trendingProducts || trendingProducts.length === 0) return;
+    
     setCurrentIndex((prevIndex) => {
       const newIndex = prevIndex === 0 ? trendingProducts.length - 1 : prevIndex - 1;
+      updateVisibleProducts(newIndex);
       return newIndex;
     });
   };
+  
+  // Update visible products when currentIndex or productsPerSlide changes
+  useEffect(() => {
+    if (trendingProducts && trendingProducts.length > 0) {
+      updateVisibleProducts(currentIndex);
+    }
+  }, [currentIndex, productsPerSlide, trendingProducts]);
 
   // Auto-scroll the carousel
   useEffect(() => {
-    updateVisibleProducts();
+    if (!trendingProducts || trendingProducts.length === 0) return;
+    
     const interval = setInterval(() => {
       nextSlide();
     }, 5000);
+    
     return () => clearInterval(interval);
-  }, [nextSlide, updateVisibleProducts]);
+  }, [currentIndex, trendingProducts]);
 
   return (
     <div className="trending-products">
