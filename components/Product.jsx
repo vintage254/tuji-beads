@@ -9,19 +9,26 @@ const Product = ({ product }) => {
   
   const { image, name, slug, price } = product;
   
+  // Get image URL with proper error handling
+  const imageUrl = image && image[0] ? urlFor(image[0]) : '';
+  
   return (
     <div>
-      <Link href={`/product/${slug.current}`}>
+      <Link href={`/product/${slug?.current || ''}`}>
         <div className="product-card">
-          <Image 
-            src={urlFor(image && image[0])}
-            alt={name}
-            width={250}
-            height={250}
-            className="product-image"
-          />
-          <p className="product-name">{name}</p>
-          <p className="product-price">KSH{price}</p>
+          {imageUrl ? (
+            <Image 
+              src={imageUrl}
+              alt={name || 'Product Image'}
+              width={250}
+              height={250}
+              className="product-image"
+            />
+          ) : (
+            <div className="product-image-placeholder">No Image Available</div>
+          )}
+          <p className="product-name">{name || 'Unnamed Product'}</p>
+          <p className="product-price">KSH{price || 0}</p>
         </div>
       </Link>
     </div>
