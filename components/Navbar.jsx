@@ -12,6 +12,10 @@ const Navbar = () => {
   const { showCart, setShowCart, showAuth, setShowAuth, totalQuantities, user, logout } = useStateContext();
   const router = useRouter();
   
+  const handleSignIn = () => {
+    setShowAuth(true);
+  };
+  
   return (
     <>
       <div className="navbar-container">
@@ -46,7 +50,7 @@ const Navbar = () => {
               </button>
             </div>
           ) : (
-            <button type="button" className="auth-button" onClick={() => setShowAuth(true)}>
+            <button type="button" className="auth-button" onClick={handleSignIn}>
               <AiOutlineUser />
               <span>Sign In</span>
             </button>

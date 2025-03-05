@@ -12,7 +12,7 @@ const Authentication = ({ setShowAuth }) => {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
-  const { setUser } = useStateContext();
+  const { setUser, showAuth } = useStateContext();
 
   const handleLogin = async (e) => {
     e.preventDefault();
@@ -36,7 +36,6 @@ const Authentication = ({ setShowAuth }) => {
       }
 
       setUser(data);
-      localStorage.setItem('user', JSON.stringify(data));
       toast.success('Login successful!');
       setShowAuth(false);
     } catch (err) {

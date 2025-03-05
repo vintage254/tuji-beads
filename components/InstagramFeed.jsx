@@ -17,7 +17,7 @@ const InstagramFeed = () => {
   const fallbackPosts = useMemo(() => [
     {
       id: 'fallback1',
-      media_url: '/instagram-1.jpg',
+      media_url: '/instagram/instagram-1.jpg',
       permalink: 'https://instagram.com',
       caption: 'Beautiful handcrafted beads #tujibeads',
       timestamp: new Date().toISOString(),
@@ -26,7 +26,7 @@ const InstagramFeed = () => {
     },
     {
       id: 'fallback2',
-      media_url: '/instagram-2.jpg',
+      media_url: '/instagram/instagram-2.jpg',
       permalink: 'https://instagram.com',
       caption: 'New collection just arrived! #beadwork',
       timestamp: new Date().toISOString(),
@@ -35,7 +35,7 @@ const InstagramFeed = () => {
     },
     {
       id: 'fallback3',
-      media_url: '/instagram-3.jpg',
+      media_url: '/instagram/instagram-3.jpg',
       permalink: 'https://instagram.com',
       caption: 'Traditional Kenyan craftsmanship #handmade',
       timestamp: new Date().toISOString(),
@@ -44,7 +44,7 @@ const InstagramFeed = () => {
     },
     {
       id: 'fallback4',
-      media_url: '/instagram-4.jpg',
+      media_url: '/instagram/instagram-4.jpg',
       permalink: 'https://instagram.com',
       caption: 'Perfect for any occasion #giftideas',
       timestamp: new Date().toISOString(),
@@ -71,6 +71,7 @@ const InstagramFeed = () => {
     } catch (err) {
       console.error('Error fetching Instagram posts:', err);
       setError(err.message);
+      setPosts(fallbackPosts);
     }
   }, [fallbackPosts]);
 
@@ -117,10 +118,14 @@ const InstagramFeed = () => {
               key={post.id} 
               className="instagram-post"
             >
-              <div 
-                className="instagram-image" 
-                style={{ backgroundImage: `url(${post.media_url})` }}
-              >
+              <div className="instagram-image-container">
+                <Image 
+                  src={post.media_url}
+                  alt={post.caption || "Instagram post"}
+                  width={300}
+                  height={300}
+                  className="instagram-image"
+                />
                 <div className="instagram-overlay">
                   <div className="instagram-stats">
                     <span>{post.likes || '♥'} likes</span>

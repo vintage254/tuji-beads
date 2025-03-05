@@ -1,7 +1,6 @@
-// This is a serverless function to fetch Instagram posts
-// It uses the Instagram Basic Display API
+import { NextResponse } from 'next/server';
 
-export default async function handler(req, res) {
+export async function GET() {
   // Instagram API credentials (should be stored in environment variables)
   const instagramAccessToken = process.env.INSTAGRAM_ACCESS_TOKEN;
   const instagramUserId = process.env.INSTAGRAM_USER_ID;
@@ -9,7 +8,7 @@ export default async function handler(req, res) {
   // If we don't have the required credentials, return fallback data
   if (!instagramAccessToken || !instagramUserId) {
     console.warn('Instagram credentials not found in environment variables');
-    return res.status(200).json({ 
+    return NextResponse.json({ 
       posts: getFallbackPosts(),
       source: 'fallback'
     });
@@ -43,7 +42,7 @@ export default async function handler(req, res) {
         comments: undefined
       }));
     
-    return res.status(200).json({ 
+    return NextResponse.json({ 
       posts,
       source: 'instagram'
     });
@@ -51,7 +50,7 @@ export default async function handler(req, res) {
     console.error('Error fetching Instagram feed:', error);
     
     // Return fallback data in case of error
-    return res.status(200).json({ 
+    return NextResponse.json({ 
       posts: getFallbackPosts(),
       source: 'fallback'
     });
@@ -63,7 +62,7 @@ function getFallbackPosts() {
   return [
     {
       id: 'fallback1',
-      media_url: '/instagram-1.jpg',
+      media_url: '/instagram/instagram-1.jpg',
       permalink: 'https://instagram.com',
       caption: 'Beautiful handcrafted beads #tujibeads',
       timestamp: new Date().toISOString(),
@@ -72,7 +71,7 @@ function getFallbackPosts() {
     },
     {
       id: 'fallback2',
-      media_url: '/instagram-2.jpg',
+      media_url: '/instagram/instagram-2.jpg',
       permalink: 'https://instagram.com',
       caption: 'New collection just arrived! #beadwork',
       timestamp: new Date().toISOString(),
@@ -81,7 +80,7 @@ function getFallbackPosts() {
     },
     {
       id: 'fallback3',
-      media_url: '/instagram-3.jpg',
+      media_url: '/instagram/instagram-3.jpg',
       permalink: 'https://instagram.com',
       caption: 'Traditional Kenyan craftsmanship #handmade',
       timestamp: new Date().toISOString(),
@@ -90,7 +89,7 @@ function getFallbackPosts() {
     },
     {
       id: 'fallback4',
-      media_url: '/instagram-4.jpg',
+      media_url: '/instagram/instagram-4.jpg',
       permalink: 'https://instagram.com',
       caption: 'Perfect for any occasion #giftideas',
       timestamp: new Date().toISOString(),
