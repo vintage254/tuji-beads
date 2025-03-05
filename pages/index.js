@@ -73,14 +73,33 @@ const Home = ({ products, bannerData }) => {
 }
 
 export const getServerSideProps = async () => {
-  const query = '*[_type == "product"]';
-  const products = await client.fetch(query);
+  try {
+    const query = '*[_type == "product"]';
+    const products = await client.fetch(query).catch(error => {
+      console.error('Error fetching products:', error);
+      return [];
+    });
 
-  const bannerQuery = '*[_type == "banner"]';
-  const bannerData = await client.fetch(bannerQuery);
+    const bannerQuery = '*[_type == "banner"]';
+    const bannerData = await client.fetch(bannerQuery).catch(error => {
+      console.error('Error fetching banner data:', error);
+      return [];
+    });
 
-  return {
-    props: { products, bannerData }
+    return {
+      props: { 
+        products: products || [], 
+        bannerData: bannerData || [] 
+      }
+    }
+  } catch (error) {
+    console.error('Error in getServerSideProps:', error);
+    return {
+      props: { 
+        products: [], 
+        bannerData: [] 
+      }
+    }
   }
 }
 export default Home

@@ -116,29 +116,53 @@ const ProductDetails = ({ product, products }) => {
 }
 
 export const getStaticPaths = async () => {
-    const query = `*[_type == "product"]{
-        slug{
-            current
-        }
-    }`
-    const products = await client.fetch(query)
-    const paths = products.map((product) => ({
-        params: { slug: product.slug.current }
-    }));
+    try {
+        const query = `*[_type == "product"]{
+            slug{
+                current
+            }
+        }`;
+        
+        const products = await client.fetch(query).catch(error => {
+            console.error('Error fetching products for paths:', error);
+            return [];
+        });
+        
+        const paths = products.map((product) => ({
+            params: { 
+                slug: product?.slug?.current || 'unknown-product' 
+            }
+        }));
 
-    return {
-        paths,
-        fallback: 'blocking'
-    };
+        return {
+            paths,
+            fallback: 'blocking'
+        };
+    } catch (error) {
+        console.error('Error in getStaticPaths:', error);
+        return {
+            paths: [],
+            fallback: 'blocking'
+        };
+    }
 }
 
-export const getStaticProps = async ({ params: { slug } }) => {
+export const getStaticProps = async ({ params }) => {
     try {
+        // Safely access slug parameter
+        const slug = params?.slug || '';
+        
         const query = `*[_type == "product" && slug.current == '${slug}'][0]`;
-        const product = await client.fetch(query);
+        const product = await client.fetch(query).catch(error => {
+            console.error(`Error fetching product with slug ${slug}:`, error);
+            return null;
+        });
 
         const productsQuery = '*[_type == "product"]';
-        const products = await client.fetch(productsQuery);
+        const products = await client.fetch(productsQuery).catch(error => {
+            console.error('Error fetching related products:', error);
+            return [];
+        });
 
         // If product not found, return notFound
         if (!product) {
@@ -148,13 +172,19 @@ export const getStaticProps = async ({ params: { slug } }) => {
         }
 
         return {
-            props: { product, products },
+            props: { 
+                product, 
+                products: products || [] 
+            },
             revalidate: 60, // Revalidate every 60 seconds
         };
     } catch (error) {
-        console.error('Error fetching product:', error);
+        console.error('Error in getStaticProps:', error);
         return {
-            props: { product: null, products: [] }
+            props: { 
+                product: null, 
+                products: [] 
+            }
         };
     }
 }

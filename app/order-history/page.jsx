@@ -6,11 +6,13 @@ import { Toaster } from 'react-hot-toast';
 import { useStateContext } from '../../context/StateContext';
 import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
+import Providers from '../../components/Providers';
 
 // Set this page to be dynamically rendered
 export const dynamic = 'force-dynamic';
 
-const OrderHistoryPage = () => {
+// Wrapper component that uses context
+const OrderHistoryContent = () => {
   const [isClient, setIsClient] = useState(false);
   const { user, isAuthenticated } = useStateContext();
   const router = useRouter();
@@ -41,6 +43,15 @@ const OrderHistoryPage = () => {
         <OrderHistory userId={user?._id} />
       </div>
     </div>
+  );
+};
+
+// Main page component that wraps the content with providers
+const OrderHistoryPage = () => {
+  return (
+    <Providers>
+      <OrderHistoryContent />
+    </Providers>
   );
 };
 
