@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState } from 'react';
 import { AiOutlineMail, AiOutlineCheck } from 'react-icons/ai';
 

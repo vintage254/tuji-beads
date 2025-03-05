@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect } from 'react';
 import { AiOutlineInstagram, AiOutlineLoading3Quarters } from 'react-icons/ai';
 import Link from 'next/link';
