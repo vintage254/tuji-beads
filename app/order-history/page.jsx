@@ -1,82 +1,35 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { OrderHistory } from '../../components';
-import { Toaster } from 'react-hot-toast';
-import { useStateContext } from '../../context/StateContext';
-import { useRouter } from 'next/navigation';
-import toast from 'react-hot-toast';
-import Providers from '../../components/Providers';
+import React from 'react';
+import Link from 'next/link';
 
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic';
 
-// Simple client-only component
-const OrderHistoryPage = () => {
-  const [isClient, setIsClient] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const router = useRouter();
-
-  useEffect(() => {
-    // Mark as client-side rendered
-    setIsClient(true);
-    
-    // Check authentication on the client side only
-    const checkAuth = () => {
-      const userData = localStorage.getItem('user');
-      if (!userData) {
-        toast.error('Please login to view your order history');
-        router.push('/');
-        return false;
-      }
-      return true;
-    };
-    
-    if (isClient) {
-      const isAuthenticated = checkAuth();
-      setIsLoading(!isAuthenticated);
-    }
-  }, [isClient, router]);
-
-  // Show loading state until client-side code confirms authentication
-  if (!isClient || isLoading) {
-    return (
-      <div className="loading-container">
-        <div className="loading"></div>
-      </div>
-    );
-  }
-
-  // Get user ID from localStorage directly to avoid serialization issues
-  const getUserId = () => {
-    try {
-      const userData = localStorage.getItem('user');
-      if (userData) {
-        const user = JSON.parse(userData);
-        return user._id;
-      }
-      return null;
-    } catch (error) {
-      console.error('Error parsing user data:', error);
-      return null;
-    }
-  };
-
-  const userId = getUserId();
-
+export default function OrderHistoryPlaceholder() {
   return (
-    <div className="order-history-page">
-      <h1>Your Order History</h1>
-      <Toaster />
-      <div className="order-history-container">
-        {userId ? (
-          <OrderHistory userId={userId} />
-        ) : (
-          <p>Unable to load user information. Please try logging in again.</p>
-        )}
-      </div>
+    <div style={{ 
+      padding: '50px 20px', 
+      textAlign: 'center',
+      maxWidth: '800px',
+      margin: '0 auto'
+    }}>
+      <h1>Order History</h1>
+      <p>This feature is currently being updated.</p>
+      <p>Please check back soon or contact support if you need to view your order history.</p>
+      <Link href="/">
+        <button style={{
+          padding: '10px 20px',
+          background: '#f02d34',
+          color: 'white',
+          border: 'none',
+          borderRadius: '5px',
+          cursor: 'pointer',
+          marginTop: '20px'
+        }}>
+          Return to Home
+        </button>
+      </Link>
     </div>
   );
-};
-
-export default OrderHistoryPage;
+}
