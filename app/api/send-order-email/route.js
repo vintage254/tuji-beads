@@ -1,5 +1,6 @@
 import { client } from '../../../lib/client';
 import { NextResponse } from 'next/server';
+import nodemailer from 'nodemailer';
 
 export async function POST(request) {
   try {
@@ -34,23 +35,41 @@ export async function POST(request) {
       price: item.price
     }));
 
-    // Send email (implement your email sending logic here)
-    // For now, just log the details
-    console.log('Order Email Details:', {
-      to: 'derricknjuguna414@gmail.com',
-      subject: `New Order from ${user.name}`,
-      orderDetails: {
-        orderId,
-        customer: {
-          name: user.name,
-          email: user.email,
-          phone: user.phoneNumber
-        },
-        items: formattedItems,
-        totalAmount,
-        orderDate: new Date().toISOString()
+    // Create email transporter
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASSWORD
       }
     });
+
+    // Create email content
+    const emailContent = {
+      from: process.env.EMAIL_USER,
+      to: 'derricknjuguna414@gmail.com',
+      subject: `New Order from ${user.name}`,
+      html: `
+        <h2>New Order Details</h2>
+        <p><strong>Order ID:</strong> ${orderId}</p>
+        <p><strong>Customer Name:</strong> ${user.name}</p>
+        <p><strong>Customer Email:</strong> ${user.email}</p>
+        <p><strong>Customer Phone:</strong> ${user.phoneNumber}</p>
+        
+        <h3>Order Items:</h3>
+        <ul>
+          ${formattedItems.map(item => `
+            <li>${item.name} - Quantity: ${item.quantity} - Price: KES ${item.price}</li>
+          `).join('')}
+        </ul>
+        
+        <p><strong>Total Amount:</strong> KES ${totalAmount}</p>
+        <p><strong>Order Date:</strong> ${new Date().toLocaleString()}</p>
+      `
+    };
+
+    // Send email
+    await transporter.sendMail(emailContent);
 
     return NextResponse.json({ success: true });
   } catch (error) {
