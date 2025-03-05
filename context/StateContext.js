@@ -5,36 +5,26 @@ const Context = createContext();
 
 export const StateContext = ({ children }) => {
   const [showCart, setShowCart] = useState(false);
-  const [showAuth, setShowAuth] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [totalPrice, setTotalPrice] = useState(0);
   const [totalQuantities, setTotalQuantities] = useState(0);
   const [qty, setQty] = useState(1);
   const [user, setUser] = useState(null);
 
-  // Load user from localStorage on initial render
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
+    // Load user from localStorage on initial mount
+    const savedUser = localStorage.getItem('user');
+    if (savedUser) {
       try {
-        setUser(JSON.parse(storedUser));
+        setUser(JSON.parse(savedUser));
       } catch (error) {
-        console.error('Error parsing stored user:', error);
+        console.error('Error parsing user data:', error);
+        localStorage.removeItem('user');
       }
     }
   }, []);
 
-  // Save user to localStorage whenever it changes
-  useEffect(() => {
-    if (user) {
-      localStorage.setItem('user', JSON.stringify(user));
-    } else {
-      localStorage.removeItem('user');
-    }
-  }, [user]);
-
   let foundProduct;
-  let index;
 
   const onAdd = (product, quantity) => {
     const checkProductInCart = cartItems.find((item) => item._id === product._id);
@@ -54,64 +44,53 @@ export const StateContext = ({ children }) => {
       setCartItems(updatedCartItems);
     } else {
       product.quantity = quantity;
-      
       setCartItems([...cartItems, { ...product }]);
     }
-
     toast.success(`${qty} ${product.name} added to the cart.`);
-  } 
+  };
 
   const onRemove = (product) => {
     foundProduct = cartItems.find((item) => item._id === product._id);
     const newCartItems = cartItems.filter((item) => item._id !== product._id);
 
-    setTotalPrice((prevTotalPrice) => prevTotalPrice -foundProduct.price * foundProduct.quantity);
-    setTotalQuantities(prevTotalQuantities => prevTotalQuantities - foundProduct.quantity);
+    setTotalPrice((prevTotalPrice) => prevTotalPrice - foundProduct.price * foundProduct.quantity);
+    setTotalQuantities((prevTotalQuantities) => prevTotalQuantities - foundProduct.quantity);
     setCartItems(newCartItems);
-  }
+  };
 
   const toggleCartItemQuantity = (id, value) => {
-    foundProduct = cartItems.find((item) => item._id === id)
-    index = cartItems.findIndex((product) => product._id === id);
-    const newCartItems = cartItems.filter((item) => item._id !== id)
+    foundProduct = cartItems.find((item) => item._id === id);
+    const newCartItems = cartItems.filter((item) => item._id !== id);
 
     if(value === 'inc') {
-      setCartItems([...newCartItems, { ...foundProduct, quantity: foundProduct.quantity + 1 } ]);
-      setTotalPrice((prevTotalPrice) => prevTotalPrice + foundProduct.price)
-      setTotalQuantities(prevTotalQuantities => prevTotalQuantities + 1)
+      setCartItems([...newCartItems, { ...foundProduct, quantity: foundProduct.quantity + 1 }]);
+      setTotalPrice((prevTotalPrice) => prevTotalPrice + foundProduct.price);
+      setTotalQuantities(prevTotalQuantities => prevTotalQuantities + 1);
     } else if(value === 'dec') {
       if (foundProduct.quantity > 1) {
-        setCartItems([...newCartItems, { ...foundProduct, quantity: foundProduct.quantity - 1 } ]);
-        setTotalPrice((prevTotalPrice) => prevTotalPrice - foundProduct.price)
-        setTotalQuantities(prevTotalQuantities => prevTotalQuantities - 1)
+        setCartItems([...newCartItems, { ...foundProduct, quantity: foundProduct.quantity - 1 }]);
+        setTotalPrice((prevTotalPrice) => prevTotalPrice - foundProduct.price);
+        setTotalQuantities(prevTotalQuantities => prevTotalQuantities - 1);
       }
     }
-  }
+  };
 
   const incQty = () => {
     setQty((prevQty) => prevQty + 1);
-  }
+  };
 
   const decQty = () => {
     setQty((prevQty) => {
       if(prevQty - 1 < 1) return 1;
-     
       return prevQty - 1;
     });
-  }
-
-  const logout = () => {
-    setUser(null);
-    toast.success('Logged out successfully');
-  }
+  };
 
   return (
     <Context.Provider
       value={{
         showCart,
         setShowCart,
-        showAuth,
-        setShowAuth,
         cartItems,
         totalPrice,
         totalQuantities,
@@ -125,13 +104,12 @@ export const StateContext = ({ children }) => {
         setTotalPrice,
         setTotalQuantities,
         user,
-        setUser,
-        logout
+        setUser
       }}
     >
       {children}
     </Context.Provider>
-  )
-}
+  );
+};
 
 export const useStateContext = () => useContext(Context);
