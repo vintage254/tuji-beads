@@ -13,8 +13,9 @@ const Navbar = () => {
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
+  const [scrolled, setScrolled] = useState(false);
   
-  // Handle window resize
+  // Handle window resize and scroll
   useEffect(() => {
     const handleResize = () => {
       setWindowWidth(window.innerWidth);
@@ -23,9 +24,21 @@ const Navbar = () => {
       }
     };
     
+    const handleScroll = () => {
+      if (window.scrollY > 50) {
+        setScrolled(true);
+      } else {
+        setScrolled(false);
+      }
+    };
+    
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', handleResize);
-      return () => window.removeEventListener('resize', handleResize);
+      window.addEventListener('scroll', handleScroll);
+      return () => {
+        window.removeEventListener('resize', handleResize);
+        window.removeEventListener('scroll', handleScroll);
+      };
     }
   }, []);
   
@@ -40,7 +53,7 @@ const Navbar = () => {
   
   return (
     <>
-      <div className="navbar-container">
+      <div className={`navbar-container ${scrolled ? 'scrolled' : ''}`}>
         <div className="logo">
           <Link href="/">
             <Image src="/logo.png" alt="Beads Charm Logo" width={120} height={60} quality={100} />
@@ -96,6 +109,14 @@ const Navbar = () => {
         
         {/* Mobile Navigation Menu */}
         <div className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`}>
+          <div className="mobile-nav-header">
+            <div className="mobile-logo">
+              <Image src="/logo.png" alt="Beads Charm Logo" width={100} height={50} quality={100} />
+            </div>
+            <button onClick={toggleMobileMenu} aria-label="Close menu" className="mobile-close-btn">
+              <AiOutlineClose size={24} />
+            </button>
+          </div>
           <div className="mobile-nav-links">
             <Link href="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
             <Link href="/products" onClick={() => setMobileMenuOpen(false)}>Products</Link>

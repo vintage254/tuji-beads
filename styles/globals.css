@@ -58,8 +58,10 @@ a {
 /* Media Queries for Responsive Design */
 @media screen and (max-width: 768px) {
   .navbar-container {
-    padding: 10px;
+    padding: 12px;
     margin: 6px 10px;
+    position: relative;
+    z-index: 1000;
   }
   
   .desktop-nav {
@@ -81,6 +83,16 @@ a {
   .logo img {
     width: 100px;
     height: auto;
+  }
+  
+  /* Fixed position for mobile menu toggle when scrolling */
+  .navbar-container.scrolled {
+    position: sticky;
+    top: 0;
+    background-color: rgba(245, 245, 245, 0.95);
+    backdrop-filter: blur(10px);
+    transition: all 0.3s ease;
+    z-index: 1000;
   }
 }
 
@@ -160,6 +172,7 @@ span.text-red {
 .mobile-menu-toggle {
   display: none;
   margin-right: 15px;
+  z-index: 1001; /* Ensure it's above the mobile menu */
 }
 
 .mobile-menu-toggle button {
@@ -167,10 +180,17 @@ span.text-red {
   border: none;
   color: #324d67;
   cursor: pointer;
-  padding: 5px;
+  padding: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.mobile-menu-toggle button:hover {
+  background-color: rgba(240, 45, 52, 0.05);
+  color: #f02d34;
 }
 
 /* Mobile Navigation */
@@ -187,6 +207,7 @@ span.text-red {
   transform: translateX(-100%);
   transition: transform 0.3s ease-in-out;
   overflow-y: auto;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
 }
 
 .mobile-nav.open {
@@ -196,16 +217,24 @@ span.text-red {
 .mobile-nav-links {
   display: flex;
   flex-direction: column;
-  gap: 20px;
-  margin-top: 60px;
+  gap: 15px;
+  margin-top: 70px;
 }
 
 .mobile-nav-links a {
   color: #324d67;
   font-weight: 500;
   font-size: 18px;
-  padding: 10px 0;
+  padding: 12px 10px;
+  border-radius: 8px;
   border-bottom: 1px solid #f5f5f5;
+  transition: all 0.3s ease;
+}
+
+.mobile-nav-links a:hover,
+.mobile-nav-links a:active {
+  background-color: rgba(240, 45, 52, 0.05);
+  color: #f02d34;
 }
 
 .mobile-nav-buttons {
@@ -213,6 +242,8 @@ span.text-red {
   flex-direction: column;
   gap: 15px;
   margin-top: 30px;
+  border-top: 1px solid #f0f0f0;
+  padding-top: 20px;
 }
 
 .user-menu-mobile {
@@ -2697,6 +2728,20 @@ margin-top: 160px;
   margin-top: 0.5rem;
 }
 
+.auth-error {
+  color: #f02d34;
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+.general-error {
+  background-color: rgba(240, 45, 52, 0.1);
+  padding: 0.75rem;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
 .auth-toggle {
   margin-top: 1rem;
   text-align: center;
@@ -2714,4 +2759,27 @@ margin-top: 160px;
 
 .toggle-auth-btn:hover {
   text-decoration: underline;
+}
+
+/* Loading spinner styles */
+.loading-spinner {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 150px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid rgba(0, 0, 0, 0.1);
+  border-radius: 50%;
+  border-top-color: #f02d34;
+  animation: spin 1s ease-in-out infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }

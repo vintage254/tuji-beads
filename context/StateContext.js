@@ -107,21 +107,52 @@ export const StateContext = ({ children }) => {
   };
 
   const authenticatedFetch = async (url, options = {}) => {
-    if (!token) {
-      throw new Error('No authentication token available');
+    // First check the token in state
+    let currentToken = token;
+    
+    // If no token in state, try to get it from localStorage as a fallback
+    if (!currentToken && typeof window !== 'undefined') {
+      currentToken = localStorage.getItem('token');
+      
+      // If found in localStorage but not in state, update state
+      if (currentToken) {
+        setToken(currentToken);
+      } else {
+        throw new Error('No authentication token available. Please sign in again.');
+      }
     }
 
     const headers = {
+      'Content-Type': 'application/json',
       ...options.headers,
-      'Authorization': `Bearer ${token}`
+      'Authorization': `Bearer ${currentToken}`
     };
 
-    const response = await fetch(url, {
-      ...options,
-      headers
-    });
-
-    return response;
+    try {
+      const response = await fetch(url, {
+        ...options,
+        headers
+      });
+      
+      // Handle authentication errors
+      if (response.status === 401) {
+        // Token might be expired or invalid
+        console.error('Authentication failed with status 401');
+        
+        // Clear the invalid token
+        if (typeof window !== 'undefined') {
+          localStorage.removeItem('token');
+          setToken(null);
+        }
+        
+        throw new Error('Authentication failed. Please sign in again.');
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Error in authenticatedFetch:', error);
+      throw error;
+    }
   };
 
   let foundProduct;

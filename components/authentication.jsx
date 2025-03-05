@@ -3,7 +3,8 @@ import { useStateContext } from '../context/StateContext';
 import { toast } from 'react-hot-toast';
 import { AiOutlineClose } from 'react-icons/ai';
 
-const Authentication = ({ onClose }) => {
+const Authentication = ({ setShowAuth }) => {
+  const onClose = () => setShowAuth(false);
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: '',
@@ -95,8 +96,8 @@ const Authentication = ({ onClose }) => {
   };
 
   return (
-    <div className="auth-modal">
-      <div className="auth-form-container">
+    <div className="auth-wrapper">
+      <div className="auth-container">
         <h2>{isLogin ? 'Login' : 'Create Account'}</h2>
         
         {isLoading ? (
@@ -180,7 +181,7 @@ const Authentication = ({ onClose }) => {
                   <button
                     type="button"
                     onClick={toggleMode}
-                    className="toggle-btn"
+                    className="toggle-auth-btn"
                   >
                     {isLogin ? 'Sign Up' : 'Login'}
                   </button>
@@ -190,7 +191,7 @@ const Authentication = ({ onClose }) => {
           </form>
         )}
         
-        <button className="close-btn" onClick={onClose}>
+        <button className="auth-close-btn" onClick={onClose}>
           <AiOutlineClose />
         </button>
       </div>

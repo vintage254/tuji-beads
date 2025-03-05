@@ -7,6 +7,13 @@ export const runtime = 'edge';
 
 export async function POST(request) {
   try {
+    // Log the authorization header for debugging
+    const authHeader = request.headers.get('Authorization');
+    console.log('Authorization header present:', !!authHeader);
+    if (authHeader) {
+      console.log('Authorization header format:', authHeader.startsWith('Bearer ') ? 'Valid Bearer format' : 'Invalid format');
+    }
+    
     // Check if the user is authenticated
     const authUser = await isAuthenticated(request);
     
@@ -136,9 +143,22 @@ export async function POST(request) {
     });
   } catch (error) {
     console.error('Error creating order:', error);
+    
+    // Provide more detailed error information for debugging
+    let statusCode = 500;
+    let errorMessage = 'Failed to create order';
+    
+    if (error.message && error.message.includes('authentication')) {
+      statusCode = 401;
+      errorMessage = 'Authentication error: ' + error.message;
+    } else if (error.message && error.message.includes('permission')) {
+      statusCode = 403;
+      errorMessage = 'Permission denied: ' + error.message;
+    }
+    
     return NextResponse.json(
-      { error: 'Failed to create order', message: error.message },
-      { status: 500 }
+      { error: errorMessage, message: error.message, stack: process.env.NODE_ENV === 'development' ? error.stack : undefined },
+      { status: statusCode }
     );
   }
 }

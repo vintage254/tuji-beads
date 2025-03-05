@@ -15,7 +15,7 @@ const Cart = () => {
   const cartRef = React.useRef();
   const router = useRouter();
   const pathname = usePathname();
-  const { totalPrice, totalQuantities, cartItems, setShowCart, toggleCartItemQuantity, onRemove, setCartItems, setTotalPrice, setTotalQuantities } = useStateContext();
+  const { totalPrice, totalQuantities, cartItems, setShowCart, toggleCartItemQuantity, onRemove, setCartItems, setTotalPrice, setTotalQuantities, authenticatedFetch, isAuthenticated } = useStateContext();
 
   const { user, setShowAuth } = useStateContext();
 
@@ -26,7 +26,7 @@ const Cart = () => {
     }
     
     // Check if user is logged in
-    if (!user) {
+    if (!user || !isAuthenticated()) {
       toast.error('Please sign in to place an order');
       setShowCart(false);
       setShowAuth(true);
@@ -34,22 +34,9 @@ const Cart = () => {
     }
     
     try {
-      // Get auth token from cookies
-      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        acc[key] = value;
-        return acc;
-      }, {});
-      
-      const authToken = cookies['auth_token'];
-      
-      // Create order through API route
-      const response = await fetch('/api/orders/create', {
+      // Create order through API route using authenticatedFetch
+      const response = await authenticatedFetch('/api/orders/create', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': authToken ? `Bearer ${authToken}` : ''
-        },
         body: JSON.stringify({
           items: cartItems.map(item => ({
             productId: item._id,
