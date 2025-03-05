@@ -9,26 +9,13 @@ import Image from 'next/image';
 const OrderHistory = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
   const { user } = useStateContext();
-
-  // Add a refreshInterval to periodically check for new orders
-  useEffect(() => {
-    if (user) {
-      fetchOrders();
-      
-      // Set up an interval to refresh orders every 30 seconds
-      const refreshInterval = setInterval(() => {
-        fetchOrders();
-      }, 30000);
-      
-      // Clean up the interval when component unmounts
-      return () => clearInterval(refreshInterval);
-    }
-  }, [user]);
 
   const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
       const query = `*[_type == "order" && user._ref == $userId] | order(orderDate desc){
         _id,
         orderItems[]{product->{_id, name, image, price}, quantity},
@@ -36,20 +23,33 @@ const OrderHistory = () => {
         orderDate,
         status
       }`;
-      
       const result = await client.fetch(query, { userId: user._id });
-      setOrders(result);
-    } catch (error) {
-      console.error('Error fetching orders:', error);
-      toast.error('Failed to load order history');
+      // Filter out any invalid orders
+      const validOrders = result.filter(order => order && order._id);
+      setOrders(validOrders);
+    } catch (err) {
+      console.error('Error fetching orders:', err);
+      setError('Failed to load orders');
+      setOrders([]);
     } finally {
       setLoading(false);
     }
   }, [user._id]);
 
   useEffect(() => {
-    fetchOrders();
+    if (user) {
+      fetchOrders();
+    }
   }, [fetchOrders, user]);
+
+  useEffect(() => {
+    if (user) {
+      const refreshInterval = setInterval(() => {
+        fetchOrders();
+      }, 30000);
+      return () => clearInterval(refreshInterval);
+    }
+  }, [user]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -73,6 +73,14 @@ const OrderHistory = () => {
     );
   }
 
+  if (loading) {
+    return <div className="loading">Loading orders...</div>;
+  }
+
+  if (error) {
+    return <div className="error">{error}</div>;
+  }
+
   return (
     <div className="order-history-container">
       <div className="order-history-header">
@@ -86,9 +94,7 @@ const OrderHistory = () => {
         </button>
       </div>
       
-      {loading ? (
-        <div className="loading">Loading your orders...</div>
-      ) : orders.length === 0 ? (
+      {orders.length === 0 ? (
         <div className="no-orders">
           <p>You haven&apos;t placed any orders yet.</p>
         </div>
@@ -100,7 +106,9 @@ const OrderHistory = () => {
                 <div className="order-date">
                   <span>Ordered on:</span> {formatDate(order.orderDate)}
                 </div>
-                {/* Status display removed as requested */}
+                <div className="order-status">
+                  <p>Status: {order.status || 'Processing'}</p>
+                </div>
               </div>
               
               <div className="order-items">
