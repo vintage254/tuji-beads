@@ -14,12 +14,6 @@ const OrderHistoryFallback = dynamic(() => import('../../components/OrderHistory
 export const dynamic = 'force-dynamic';
 export const runtime = 'edge';
 
-// Add config to prevent static generation
-export const config = {
-  unstable_runtimeJS: true,
-  unstable_JsPreload: false,
-};
-
 // Simple client-only component
 export default function OrderHistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
