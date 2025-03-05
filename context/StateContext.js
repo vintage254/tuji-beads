@@ -24,6 +24,24 @@ export const StateContext = ({ children }) => {
     }
   }, []);
 
+  // Save user to localStorage whenever it changes
+  useEffect(() => {
+    if (user) {
+      localStorage.setItem('user', JSON.stringify(user));
+    } else {
+      localStorage.removeItem('user');
+    }
+  }, [user]);
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem('user');
+    setCartItems([]);
+    setTotalPrice(0);
+    setTotalQuantities(0);
+    toast.success('Logged out successfully');
+  };
+
   let foundProduct;
 
   const onAdd = (product, quantity) => {
@@ -104,7 +122,8 @@ export const StateContext = ({ children }) => {
         setTotalPrice,
         setTotalQuantities,
         user,
-        setUser
+        setUser,
+        logout
       }}
     >
       {children}
@@ -112,4 +131,12 @@ export const StateContext = ({ children }) => {
   );
 };
 
-export const useStateContext = () => useContext(Context);
+export default StateContext;
+
+export const useStateContext = () => {
+  const context = useContext(Context);
+  if (context === undefined) {
+    throw new Error('useStateContext must be used within a StateContext.Provider');
+  }
+  return context;
+};
