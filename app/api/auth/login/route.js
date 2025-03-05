@@ -1,7 +1,10 @@
 import { client } from '../../../../lib/client';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import { generateToken } from '../../../../lib/auth';
+
+// Using Edge Runtime since we've updated auth to use jose
+export const runtime = 'edge';
 
 export async function POST(request) {
   try {
@@ -48,16 +51,12 @@ export async function POST(request) {
     // Remove password from user object before sending response
     const { password: _, ...userWithoutPassword } = user;
 
-    // Generate JWT token
-    const token = jwt.sign(
-      { 
-        userId: user._id,
-        email: user.email,
-        role: user.role || 'customer'
-      },
-      process.env.JWT_SECRET || 'fallback_secret_key_change_this',
-      { expiresIn: '7d' }
-    );
+    // Generate JWT token using jose
+    const token = await generateToken({
+      _id: user._id,
+      email: user.email,
+      role: user.role || 'customer'
+    });
 
     // Set cookie with the token
     const response = NextResponse.json({

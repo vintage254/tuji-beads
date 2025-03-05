@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 
+// Using Edge Runtime
+export const runtime = 'edge';
+
 export async function POST() {
   try {
     // Create a response that will clear the auth cookie

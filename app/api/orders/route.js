@@ -5,7 +5,7 @@ import { getTokenFromRequest } from '../../../lib/auth';
 // Set this route to be dynamically rendered
 export const dynamic = 'force-dynamic';
 
-// Add edge runtime
+// Using Edge Runtime since we've updated auth to use jose
 export const runtime = 'edge';
 
 export async function GET(request) {
@@ -27,17 +27,19 @@ export async function GET(request) {
     
     if (!userIdToUse && token) {
       try {
-        // You would normally decode the token here to get the userId
-        // For simplicity, we'll just use a placeholder
-        // In a real app, you'd use something like:
-        // const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        // userIdToUse = decoded.userId;
+        // Use the jose library to verify and decode the token
+        const { verifyToken } = await import('../../../lib/auth');
+        const decoded = await verifyToken(token);
         
-        // For now, just return an error if no userId provided
-        return NextResponse.json(
-          { error: 'User ID is required' },
-          { status: 400 }
-        );
+        if (decoded && decoded.userId) {
+          userIdToUse = decoded.userId;
+        } else {
+          // If token is valid but doesn't contain userId
+          return NextResponse.json(
+            { error: 'User ID is required' },
+            { status: 400 }
+          );
+        }
       } catch (error) {
         return NextResponse.json(
           { error: 'Invalid token' },

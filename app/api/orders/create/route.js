@@ -2,10 +2,13 @@ import { client } from '../../../../lib/client';
 import { NextResponse } from 'next/server';
 import { isAuthenticated } from '../../../../lib/auth';
 
+// Using Edge Runtime since we've updated auth to use jose
+export const runtime = 'edge';
+
 export async function POST(request) {
   try {
     // Check if the user is authenticated
-    const authUser = isAuthenticated(request);
+    const authUser = await isAuthenticated(request);
     
     if (!authUser) {
       return NextResponse.json(
