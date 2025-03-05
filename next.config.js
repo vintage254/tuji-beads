@@ -12,19 +12,10 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Simplified output
-  output: 'export',
-  // Disable static generation for problematic pages
-  distDir: 'out',
-  // Completely disable page optimization to avoid serialization issues
+  // Disable SWC minification
   swcMinify: false,
-  // Exclude problematic routes from the build
-  exportPathMap: async function() {
-    return {
-      '/': { page: '/' },
-      // Exclude order-history and other problematic pages
-    };
-  },
+  // Increase static generation timeout
+  staticPageGenerationTimeout: 180,
 }
 
 module.exports = nextConfig

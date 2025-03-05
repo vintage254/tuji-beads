@@ -12,6 +12,15 @@ export function middleware(request) {
     '/checkout'
   ];
 
+  // Special handling for order-history to prevent static generation issues
+  if (request.nextUrl.pathname.startsWith('/order-history')) {
+    // Set a header to indicate this is a dynamic route
+    const response = NextResponse.next();
+    response.headers.set('x-middleware-cache', 'no-cache');
+    response.headers.set('Cache-Control', 'no-store');
+    return response;
+  }
+
   // Check if the current path is a protected route
   const isProtectedRoute = protectedRoutes.some(route => 
     request.nextUrl.pathname.startsWith(route)
