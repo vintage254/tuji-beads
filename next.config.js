@@ -4,8 +4,8 @@ const nextConfig = {
   images: {
     domains: ['cdn.sanity.io'],
   },
-  // Transpile jsonwebtoken and related packages
-  transpilePackages: ['jsonwebtoken', 'jws', 'jwa'],
+  // Transpile related packages but not jsonwebtoken
+  transpilePackages: ['jws', 'jwa'],
   // Configure environment for server components
   experimental: {
     serverComponentsExternalPackages: ['jsonwebtoken'],
