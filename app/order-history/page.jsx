@@ -8,26 +8,38 @@ import { useRouter } from 'next/navigation';
 import toast from 'react-hot-toast';
 import Providers from '../../components/Providers';
 
-// Set this page to be dynamically rendered
+// Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic';
 
-// Wrapper component that uses context
-const OrderHistoryContent = () => {
+// Simple client-only component
+const OrderHistoryPage = () => {
   const [isClient, setIsClient] = useState(false);
-  const { user, isAuthenticated } = useStateContext();
+  const [isLoading, setIsLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
+    // Mark as client-side rendered
     setIsClient(true);
     
-    // Redirect to home if not authenticated
-    if (isClient && !isAuthenticated()) {
-      toast.error('Please login to view your order history');
-      router.push('/');
+    // Check authentication on the client side only
+    const checkAuth = () => {
+      const userData = localStorage.getItem('user');
+      if (!userData) {
+        toast.error('Please login to view your order history');
+        router.push('/');
+        return false;
+      }
+      return true;
+    };
+    
+    if (isClient) {
+      const isAuthenticated = checkAuth();
+      setIsLoading(!isAuthenticated);
     }
-  }, [isClient, isAuthenticated, router]);
+  }, [isClient, router]);
 
-  if (!isClient || !isAuthenticated()) {
+  // Show loading state until client-side code confirms authentication
+  if (!isClient || isLoading) {
     return (
       <div className="loading-container">
         <div className="loading"></div>
@@ -35,23 +47,35 @@ const OrderHistoryContent = () => {
     );
   }
 
+  // Get user ID from localStorage directly to avoid serialization issues
+  const getUserId = () => {
+    try {
+      const userData = localStorage.getItem('user');
+      if (userData) {
+        const user = JSON.parse(userData);
+        return user._id;
+      }
+      return null;
+    } catch (error) {
+      console.error('Error parsing user data:', error);
+      return null;
+    }
+  };
+
+  const userId = getUserId();
+
   return (
     <div className="order-history-page">
       <h1>Your Order History</h1>
       <Toaster />
       <div className="order-history-container">
-        <OrderHistory userId={user?._id} />
+        {userId ? (
+          <OrderHistory userId={userId} />
+        ) : (
+          <p>Unable to load user information. Please try logging in again.</p>
+        )}
       </div>
     </div>
-  );
-};
-
-// Main page component that wraps the content with providers
-const OrderHistoryPage = () => {
-  return (
-    <Providers>
-      <OrderHistoryContent />
-    </Providers>
   );
 };
 

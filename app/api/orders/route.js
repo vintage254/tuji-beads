@@ -1,74 +1,63 @@
 import { client } from '../../../lib/client';
 import { NextResponse } from 'next/server';
-import { isAuthenticated } from '../../../lib/auth';
+import { getTokenFromRequest } from '../../../lib/auth';
 
-// Force dynamic rendering for this route
+// Set this route to be dynamically rendered
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
-    // Get userId from query params first
+    // Get the user ID from the query parameter
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    
-    // Validate userId
+
     if (!userId) {
       return NextResponse.json(
         { error: 'User ID is required' },
         { status: 400 }
       );
     }
+
+    // Verify authentication
+    const token = getTokenFromRequest(request);
     
-    // Try to authenticate, but don't fail if it doesn't work
-    let user = null;
-    try {
-      user = isAuthenticated(request);
-    } catch (authError) {
-      console.error('Authentication error:', authError);
-      // Continue without authentication
-    }
-    
-    // If we have a user, check permissions
-    if (user && user.userId !== userId && user.role !== 'admin') {
+    if (!token) {
       return NextResponse.json(
-        { error: 'Unauthorized to access these orders' },
-        { status: 403 }
+        { error: 'Authentication required' },
+        { status: 401 }
       );
     }
-    
-    // Enhanced query to fetch product details along with order information
-    const query = `*[_type == "order" && user._ref == $userId] | order(_createdAt desc) {
+
+    // Fetch orders from Sanity
+    const query = `*[_type == "order" && userId == $userId] {
       _id,
       _createdAt,
-      orderItems[] {
-        _key,
+      userId,
+      orderItems[]{
         quantity,
-        price,
-        product-> {
+        product->{
           _id,
           name,
+          price,
           slug,
           image
         }
       },
-      totalAmount,
+      total,
       status
-    }`;
-    
-    try {
-      const orders = await client.fetch(query, { userId });
-      return NextResponse.json(orders);
-    } catch (fetchError) {
-      console.error('Error fetching orders from Sanity:', fetchError);
-      return NextResponse.json(
-        { error: 'Failed to fetch orders from database' },
-        { status: 500 }
-      );
-    }
+    } | order(_createdAt desc)`;
+
+    const orders = await client.fetch(query, { userId }).catch(error => {
+      console.error('Error fetching orders from Sanity:', error);
+      throw new Error('Failed to fetch orders from database');
+    });
+
+    // Return the orders
+    return NextResponse.json(orders);
   } catch (error) {
     console.error('Error in orders API route:', error);
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: error.message || 'Internal server error' },
       { status: 500 }
     );
   }

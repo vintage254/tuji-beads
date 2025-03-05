@@ -32,6 +32,10 @@ const nextConfig = {
     // number of pages that should be kept simultaneously without being disposed
     pagesBufferLength: 5,
   },
+  // Skip static generation for problematic pages
+  staticPageGenerationTimeout: 120,
+  // Exclude problematic pages from static generation
+  excludeDefaultMomentLocales: true,
 }
 
 module.exports = nextConfig
