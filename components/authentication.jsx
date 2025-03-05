@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useState } from 'react';
-import { authClient } from '../lib/client';
 import { useRouter } from 'next/navigation';
 import { useStateContext } from '../context/StateContext';
 import { AiOutlineMail, AiOutlineLock } from 'react-icons/ai';
@@ -21,39 +20,32 @@ const Authentication = ({ setShowAuth }) => {
     setIsLoading(true);
     
     try {
-      const query = `*[_type == "user" && email == $email][0] {
-        _id,
-        _type,
-        name,
-        email,
-        password
-      }`;
-      const params = { email: email.trim() };
-      
-      const user = await authClient.fetch(query, params);
-      
-      if (!user) {
-        setError('User not found');
-        return;
+      const response = await fetch('/api/auth', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: email.trim(),
+          password
+        })
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Authentication failed');
       }
 
-      if (user.password !== password) {
-        setError('Invalid password');
-        return;
-      }
-
-      // Remove password before storing
-      const { password: _, ...userWithoutPassword } = user;
-      
-      setUser(userWithoutPassword);
-      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
+      setUser(data);
+      localStorage.setItem('user', JSON.stringify(data));
       toast.success('Login successful!');
       setShowAuth(false);
-      router.refresh(); // Refresh the current route
+      router.refresh();
     } catch (err) {
       console.error('Authentication error:', err);
-      setError('An error occurred during authentication. Please try again.');
-      toast.error('Authentication failed');
+      setError(err.message || 'An error occurred during authentication');
+      toast.error(err.message || 'Authentication failed');
     } finally {
       setIsLoading(false);
     }
