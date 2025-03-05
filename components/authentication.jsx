@@ -1,105 +1,198 @@
-'use client';
-
 import React, { useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useStateContext } from '../context/StateContext';
-import { AiOutlineMail, AiOutlineLock } from 'react-icons/ai';
 import { toast } from 'react-hot-toast';
+import { AiOutlineClose } from 'react-icons/ai';
 
-const Authentication = ({ setShowAuth }) => {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [error, setError] = useState('');
+const Authentication = ({ onClose }) => {
+  const [isLogin, setIsLogin] = useState(true);
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    phoneNumber: ''
+  });
+  const [errors, setErrors] = useState({});
   const [isLoading, setIsLoading] = useState(false);
-  const router = useRouter();
-  const { setUser, showAuth } = useStateContext();
+  const [generalError, setGeneralError] = useState('');
+  
+  const { login, register } = useStateContext();
 
-  const handleLogin = async (e) => {
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!isLogin && !formData.name.trim()) {
+      newErrors.name = 'Name is required';
+    }
+    
+    if (!formData.email.trim()) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    if (!isLogin && !formData.phoneNumber.trim()) {
+      newErrors.phoneNumber = 'Phone number is required';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({ ...formData, [name]: value });
+    // Clear error when user types
+    if (errors[name]) {
+      setErrors({ ...errors, [name]: '' });
+    }
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    setError('');
+    setGeneralError('');
+    
+    if (!validateForm()) return;
+    
     setIsLoading(true);
     
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ 
-          email: email.trim(), 
-          password 
-        })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.error || 'Authentication failed');
+      if (isLogin) {
+        // Login
+        await login(formData.email, formData.password);
+        toast.success('Logged in successfully!');
+      } else {
+        // Register
+        await register(formData);
+        toast.success('Account created successfully!');
       }
-
-      setUser(data);
-      toast.success('Login successful!');
-      setShowAuth(false);
-    } catch (err) {
-      console.error('Authentication error:', err);
-      setError(err.message);
-      toast.error(err.message);
+      
+      // Close modal on success
+      onClose();
+    } catch (error) {
+      setGeneralError(error.message || 'Authentication failed. Please try again.');
+      toast.error(error.message || 'Authentication failed');
     } finally {
       setIsLoading(false);
     }
   };
 
+  const toggleMode = () => {
+    setIsLogin(!isLogin);
+    setFormData({
+      name: '',
+      email: '',
+      password: '',
+      phoneNumber: ''
+    });
+    setErrors({});
+    setGeneralError('');
+  };
+
   return (
-    <div className="auth-wrapper">
-      <div className="auth-container">
-        <button 
-          type='button' 
-          className='auth-close-btn' 
-          onClick={() => setShowAuth(false)}
-          disabled={isLoading}
-        >
-          ×
-        </button>
+    <div className="auth-modal">
+      <div className="auth-form-container">
+        <h2>{isLogin ? 'Login' : 'Create Account'}</h2>
         
-        <form onSubmit={handleLogin} className="auth-form">
-          <h2>Login</h2>
-          {error && <p className="error">{error}</p>}
-          <div className="form-group">
-            <label htmlFor="email">
-              <AiOutlineMail />
-              <span>Email</span>
-            </label>
-            <input 
-              type="email" 
-              id="email" 
-              placeholder="Email" 
-              value={email} 
-              onChange={(e) => setEmail(e.target.value)} 
-              required 
-              disabled={isLoading}
-            />
+        {isLoading ? (
+          <div className="loading-spinner">
+            <div className="spinner"></div>
           </div>
-          <div className="form-group">
-            <label htmlFor="password">
-              <AiOutlineLock />
-              <span>Password</span>
-            </label>
-            <input 
-              type="password" 
-              id="password" 
-              placeholder="Password" 
-              value={password} 
-              onChange={(e) => setPassword(e.target.value)} 
-              required 
-              disabled={isLoading}
-            />
-          </div>
-          <button 
-            type="submit" 
-            className="auth-button"
-            disabled={isLoading}
-          >
-            {isLoading ? 'Logging in...' : 'Login'}
-          </button>
-        </form>
+        ) : (
+          <form onSubmit={handleSubmit} className="auth-form">
+            {generalError && (
+              <div className="auth-error general-error">
+                {generalError}
+              </div>
+            )}
+            
+            {!isLogin && (
+              <div className="form-group">
+                <label htmlFor="name">Name</label>
+                <input
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={formData.name}
+                  onChange={handleChange}
+                  className={errors.name ? 'error' : ''}
+                />
+                {errors.name && <div className="auth-error">{errors.name}</div>}
+              </div>
+            )}
+            
+            <div className="form-group">
+              <label htmlFor="email">Email</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                value={formData.email}
+                onChange={handleChange}
+                className={errors.email ? 'error' : ''}
+              />
+              {errors.email && <div className="auth-error">{errors.email}</div>}
+            </div>
+            
+            <div className="form-group">
+              <label htmlFor="password">Password</label>
+              <input
+                type="password"
+                id="password"
+                name="password"
+                value={formData.password}
+                onChange={handleChange}
+                className={errors.password ? 'error' : ''}
+              />
+              {errors.password && <div className="auth-error">{errors.password}</div>}
+            </div>
+            
+            {!isLogin && (
+              <div className="form-group">
+                <label htmlFor="phoneNumber">Phone Number</label>
+                <input
+                  type="tel"
+                  id="phoneNumber"
+                  name="phoneNumber"
+                  value={formData.phoneNumber}
+                  onChange={handleChange}
+                  className={errors.phoneNumber ? 'error' : ''}
+                />
+                {errors.phoneNumber && <div className="auth-error">{errors.phoneNumber}</div>}
+              </div>
+            )}
+            
+            <div className="form-actions">
+              <button
+                className="auth-button"
+                type="submit"
+                disabled={isLoading}
+              >{isLoading ? 'Processing...' : isLogin ? 'Login' : 'Sign Up'}</button>
+              
+              <div className="auth-toggle">
+                <p>
+                  {isLogin ? "Don't have an account?" : "Already have an account?"}
+                  <button
+                    type="button"
+                    onClick={toggleMode}
+                    className="toggle-btn"
+                  >
+                    {isLogin ? 'Sign Up' : 'Login'}
+                  </button>
+                </p>
+              </div>
+            </div>
+          </form>
+        )}
+        
+        <button className="close-btn" onClick={onClose}>
+          <AiOutlineClose />
+        </button>
       </div>
     </div>
   );

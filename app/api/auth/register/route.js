@@ -5,47 +5,45 @@ import jwt from 'jsonwebtoken';
 
 export async function POST(request) {
   try {
-    const { email, password } = await request.json();
+    const { name, email, password, phoneNumber } = await request.json();
 
     // Validate input
-    if (!email || !password) {
+    if (!name || !email || !password || !phoneNumber) {
       return NextResponse.json(
-        { error: 'Email and password are required' },
+        { error: 'All fields are required' },
         { status: 400 }
       );
     }
 
-    // Find user by email
-    const user = await client.fetch(
-      `*[_type == "user" && email == $email][0]{
-        _id,
-        name,
-        email,
-        phoneNumber,
-        password,
-        role
-      }`,
+    // Check if user already exists
+    const existingUser = await client.fetch(
+      `*[_type == "user" && email == $email][0]`,
       { email }
     );
 
-    if (!user) {
+    if (existingUser) {
       return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
+        { error: 'User with this email already exists' },
+        { status: 409 }
       );
     }
 
-    // Compare passwords using bcrypt
-    const isPasswordValid = await bcrypt.compare(password, user.password);
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
 
-    if (!isPasswordValid) {
-      return NextResponse.json(
-        { error: 'Invalid credentials' },
-        { status: 401 }
-      );
-    }
+    // Create user document
+    const user = await client.create({
+      _type: 'user',
+      name,
+      email,
+      phoneNumber,
+      password: hashedPassword,
+      role: 'customer',
+      createdAt: new Date().toISOString()
+    });
 
-    // Remove password from user object before sending response
+    // Return user data without password
     const { password: _, ...userWithoutPassword } = user;
 
     // Generate JWT token
@@ -77,9 +75,9 @@ export async function POST(request) {
 
     return response;
   } catch (error) {
-    console.error('Login error:', error);
+    console.error('Registration error:', error);
     return NextResponse.json(
-      { error: 'Authentication failed' },
+      { error: 'Failed to register user' },
       { status: 500 }
     );
   }

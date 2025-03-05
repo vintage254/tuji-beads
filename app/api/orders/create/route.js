@@ -1,9 +1,28 @@
 import { client } from '../../../../lib/client';
 import { NextResponse } from 'next/server';
+import { isAuthenticated } from '../../../../lib/auth';
 
 export async function POST(request) {
   try {
+    // Check if the user is authenticated
+    const authUser = isAuthenticated(request);
+    
+    if (!authUser) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
     const { items, totalAmount, userId } = await request.json();
+    
+    // Verify that the authenticated user is creating their own order
+    if (authUser.userId !== userId && authUser.role !== 'admin') {
+      return NextResponse.json(
+        { error: 'Unauthorized to create order for another user' },
+        { status: 403 }
+      );
+    }
 
     // Create order document
     const orderDoc = {
@@ -32,7 +51,10 @@ export async function POST(request) {
     try {
       await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/send-order-email`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${request.headers.get('Authorization')?.split(' ')[1] || ''}` 
+        },
         body: JSON.stringify({
           orderId: createdOrder._id,
           items,

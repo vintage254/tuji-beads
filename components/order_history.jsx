@@ -1,114 +1,140 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useStateContext } from '../context/StateContext';
-import { client } from '../lib/client';
 import Link from 'next/link';
+import Image from 'next/image';
+import { FaShoppingBag, FaCalendarAlt, FaMoneyBillWave } from 'react-icons/fa';
+import { urlFor } from '../lib/client';
 import { toast } from 'react-hot-toast';
 
-const OrderHistory = () => {
+const OrderHistory = ({ userId }) => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { user } = useStateContext();
-
-  const fetchOrders = useCallback(async () => {
-    if (!user || !user._id) {
-      setLoading(false);
-      setError('Please log in to view your orders');
-      return;
-    }
-
-    try {
-      setLoading(true);
-      setError(null);
-      const query = `*[_type == "order" && user._ref == $userId] | order(_createdAt desc) {
-        _id,
-        _createdAt,
-        items,
-        totalAmount,
-        status
-      }`;
-      
-      const result = await client.fetch(query, { userId: user._id });
-      setOrders(result || []);
-    } catch (err) {
-      console.error('Error fetching orders:', err);
-      setError('Failed to load orders');
-      setOrders([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+  
+  const { authenticatedFetch } = useStateContext();
 
   useEffect(() => {
-    fetchOrders();
-  }, [fetchOrders]);
+    const fetchOrders = async () => {
+      if (!userId) return;
+      
+      try {
+        setLoading(true);
+        
+        // Use authenticated fetch to get orders
+        const response = await authenticatedFetch(`/api/orders?userId=${userId}`);
+        
+        if (!response.ok) {
+          throw new Error('Failed to fetch orders');
+        }
+        
+        const data = await response.json();
+        setOrders(data);
+      } catch (err) {
+        console.error('Error fetching orders:', err);
+        setError('Failed to load your orders. Please try again later.');
+        toast.error('Failed to load your orders');
+      } finally {
+        setLoading(false);
+      }
+    };
 
-  if (!user) {
+    fetchOrders();
+  }, [userId, authenticatedFetch]);
+
+  if (loading) {
     return (
-      <div className="not-logged-in">
-        <h2>Please Log In</h2>
-        <p>You need to be logged in to view your order history.</p>
-        <Link href="/login">
+      <div className="order-history-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading your orders...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="order-history-error">
+        <p>{error}</p>
+        <button onClick={() => window.location.reload()}>Try Again</button>
+      </div>
+    );
+  }
+
+  if (orders.length === 0) {
+    return (
+      <div className="no-orders">
+        <FaShoppingBag size={50} />
+        <h3>No orders yet</h3>
+        <p>You haven't placed any orders yet.</p>
+        <Link href="/">
           <button type="button" className="btn">
-            Log In
+            Continue Shopping
           </button>
         </Link>
       </div>
     );
   }
 
-  if (loading) {
-    return <div className="loading">Loading orders...</div>;
-  }
-
-  if (error) {
-    return <div className="error">{error}</div>;
-  }
-
   return (
-    <div className="order-history-container">
-      <h2>Order History</h2>
-      {orders.length === 0 ? (
-        <div className="no-orders">
-          <p>No orders found.</p>
-          <Link href="/">
-            <button type="button" className="btn">
-              Continue Shopping
-            </button>
-          </Link>
-        </div>
-      ) : (
-        <div className="orders-list">
-          {orders.map(order => order && order._id && (
-            <div key={order._id} className="order-card">
-              <div className="order-header">
-                <div className="order-date">
-                  <p>Order Date: {new Date(order._createdAt).toLocaleDateString()}</p>
-                </div>
-                <div className="order-status">
-                  <p>Status: {order.status || 'Processing'}</p>
-                </div>
-              </div>
-              <div className="order-details">
-                {order.items && order.items.map((item, index) => (
-                  <div key={`${order._id}-${index}`} className="order-item">
-                    <div className="item-info">
-                      <h4>{item.name}</h4>
-                      <p>Quantity: {item.quantity}</p>
-                      <p>Price: KSH {item.price}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="order-summary">
-                <h4>Total Amount: KSH {order.totalAmount}</h4>
-              </div>
+    <div className="orders-container">
+      {orders.map((order) => (
+        <div className="order-card" key={order._id}>
+          <div className="order-header">
+            <div className="order-id">
+              <h3>Order #{order._id.substring(0, 8)}</h3>
             </div>
-          ))}
+            <div className="order-date">
+              <FaCalendarAlt />
+              <span>{new Date(order._createdAt).toLocaleDateString()}</span>
+            </div>
+            <div className="order-total">
+              <FaMoneyBillWave />
+              <span>${order.totalAmount}</span>
+            </div>
+          </div>
+          
+          <div className="order-items">
+            {order.orderItems && order.orderItems.map((item, index) => (
+              <div className="order-item" key={`${order._id}-${index}`}>
+                <div className="item-image">
+                  {item.product?.image && (
+                    <Image
+                      src={urlFor(item.product.image[0]).url()}
+                      alt={item.product.name}
+                      width={80}
+                      height={80}
+                    />
+                  )}
+                </div>
+                <div className="item-details">
+                  <h4>{item.product?.name || 'Product'}</h4>
+                  <p>Quantity: {item.quantity}</p>
+                  <p>Price: ${item.price}</p>
+                </div>
+                <div className="item-actions">
+                  {item.product?.slug?.current && (
+                    <Link href={`/product/${item.product.slug.current}`}>
+                      <button className="view-product-btn">View Product</button>
+                    </Link>
+                  )}
+                </div>
+              </div>
+            ))}
+          </div>
+          
+          <div className="order-footer">
+            <div className="order-status">
+              <span className={`status-badge ${order.status}`}>
+                {order.status || 'Processing'}
+              </span>
+            </div>
+            <div className="order-actions">
+              <button className="btn">Track Order</button>
+            </div>
+          </div>
         </div>
-      )}
+      ))}
     </div>
   );
 };
