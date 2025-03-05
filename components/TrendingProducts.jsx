@@ -70,10 +70,12 @@ const TrendingProducts = ({ products }) => {
 
   // Auto-scroll the carousel
   useEffect(() => {
-    const interval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
-    
+    updateVisibleProducts();
+    const interval = setInterval(() => {
+      nextSlide();
+    }, 5000);
     return () => clearInterval(interval);
-  }, [nextSlide]);
+  }, [nextSlide, updateVisibleProducts]);
 
   return (
     <div className="trending-products">

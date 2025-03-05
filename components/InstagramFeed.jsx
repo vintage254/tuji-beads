@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { AiOutlineInstagram, AiOutlineLoading3Quarters } from 'react-icons/ai';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -14,7 +14,7 @@ const InstagramFeed = () => {
   const instagramUsername = 'tujibeads'; // Replace with your actual Instagram username
   
   // Fallback images in case the API fails
-  const fallbackPosts = [
+  const fallbackPosts = useMemo(() => [
     {
       id: 'fallback1',
       media_url: '/instagram-1.jpg',
@@ -51,7 +51,7 @@ const InstagramFeed = () => {
       likes: 102,
       comments: 15,
     },
-  ];
+  ], []);
 
   const fetchInstagramPosts = useCallback(async () => {
     try {

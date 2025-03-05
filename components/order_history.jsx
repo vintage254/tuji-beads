@@ -49,7 +49,7 @@ const OrderHistory = () => {
 
   useEffect(() => {
     fetchOrders();
-  }, [fetchOrders]);
+  }, [fetchOrders, user]);
 
   const formatDate = (dateString) => {
     const date = new Date(dateString);
@@ -94,7 +94,7 @@ const OrderHistory = () => {
         </div>
       ) : (
         <div className="orders-list">
-          {orders.map((order) => (
+          {orders.map((order) => order && order._id ? (
             <div key={order._id} className="order-card">
               <div className="order-header">
                 <div className="order-date">
@@ -130,7 +130,7 @@ const OrderHistory = () => {
                 <h4>Total Amount: KSH {order.totalAmount}</h4>
               </div>
             </div>
-          ))}
+          ) : null)}
         </div>
       )}
     </div>
