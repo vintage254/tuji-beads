@@ -3,26 +3,47 @@
 import React, { useState, useEffect } from 'react';
 import { OrderHistory } from '../../components';
 import { Toaster } from 'react-hot-toast';
-import { useStateContext } from '../../context/StateContext';
-import { useRouter } from 'next/router';
+import { StateContext } from '../../context/StateContext';
 import toast from 'react-hot-toast';
+import { useRouter } from 'next/navigation';
 
 const OrderHistoryPage = () => {
   const [isClient, setIsClient] = useState(false);
-  const { user, isAuthenticated } = useStateContext();
   const router = useRouter();
 
   useEffect(() => {
     setIsClient(true);
-    
+  }, []);
+
+  // Handle client-side rendering only
+  if (!isClient) {
+    return (
+      <div className="loading-container">
+        <div className="loading"></div>
+      </div>
+    );
+  }
+
+  return (
+    <StateContext>
+      <OrderHistoryContent router={router} />
+    </StateContext>
+  );
+};
+
+// Separate component that uses context
+const OrderHistoryContent = ({ router }) => {
+  const { user, isAuthenticated } = useStateContext();
+  
+  useEffect(() => {
     // Redirect to home if not authenticated
-    if (isClient && !isAuthenticated()) {
+    if (!isAuthenticated()) {
       toast.error('Please login to view your order history');
       router.push('/');
     }
-  }, [isClient, isAuthenticated, router]);
+  }, [isAuthenticated, router]);
 
-  if (!isClient || !isAuthenticated()) {
+  if (!isAuthenticated()) {
     return (
       <div className="loading-container">
         <div className="loading"></div>
