@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { client, urlFor } from '../lib/client';
 import { useStateContext } from '../context/StateContext';
 import { toast } from 'react-hot-toast';
@@ -26,7 +26,7 @@ const OrderHistory = () => {
     }
   }, [user]);
 
-  const fetchOrders = async () => {
+  const fetchOrders = useCallback(async () => {
     try {
       setLoading(true);
       const query = `*[_type == "order" && user._ref == $userId] | order(orderDate desc){
@@ -45,7 +45,7 @@ const OrderHistory = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [user._id]);
 
   useEffect(() => {
     fetchOrders();

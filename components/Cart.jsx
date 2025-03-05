@@ -132,7 +132,8 @@ const Cart = () => {
           <div className="empty-cart">
             <AiOutlineShopping size={150} />
             <h3>Your shopping cart is empty</h3>
-            <p>You haven&apos;t added any items to your cart yet.</p>
+            <p>You haven&apos;t added any items to your cart yet!</p>
+            <p>Don&apos;t forget to check out our latest products.</p>
             <Link href="/">
               <button
                 type="button"
@@ -199,7 +200,7 @@ const Cart = () => {
               >
                 <span>Make Order</span>
               </button>
-              <p className="order-note">We'll contact you via WhatsApp to confirm your order</p>
+              <p className="order-note">We&apos;ll contact you via WhatsApp to confirm your order</p>
             </div>
           </div>
         )}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState, useEffect, useRef, useMemo, useCallback } from 'react';
 import { Product } from './';
 import { AiOutlineFire, AiOutlineLeft, AiOutlineRight } from 'react-icons/ai';
 import Link from 'next/link';
@@ -41,27 +41,33 @@ const TrendingProducts = ({ products }) => {
   // Update visible products when currentIndex or productsPerSlide changes
   useEffect(() => {
     if (trendingProducts.length > 0) {
-      const endIndex = currentIndex + productsPerSlide;
-      // Create a circular array by concatenating the array with itself
-      const extendedProducts = [...trendingProducts, ...trendingProducts];
-      setVisibleProducts(extendedProducts.slice(currentIndex, endIndex));
+      updateVisibleProducts(currentIndex);
     }
   }, [currentIndex, productsPerSlide, trendingProducts]);
-  
-  const nextSlide = () => {
-    setCurrentIndex((prevIndex) => {
-      const newIndex = (prevIndex + 1) % trendingProducts.length;
-      return newIndex;
-    });
-  };
-  
+
+  const updateVisibleProducts = useCallback((index) => {
+    const start = index;
+    const end = (start + productsPerSlide) % trendingProducts.length;
+    setVisibleProducts(
+      end > start
+        ? trendingProducts.slice(start, end)
+        : [...trendingProducts.slice(start), ...trendingProducts.slice(0, end)]
+    );
+  }, [trendingProducts, productsPerSlide]);
+
+  const nextSlide = useCallback(() => {
+    const newIndex = (currentIndex + 1) % trendingProducts.length;
+    setCurrentIndex(newIndex);
+    updateVisibleProducts(newIndex);
+  }, [currentIndex, trendingProducts.length, updateVisibleProducts]);
+
   const prevSlide = () => {
     setCurrentIndex((prevIndex) => {
       const newIndex = prevIndex === 0 ? trendingProducts.length - 1 : prevIndex - 1;
       return newIndex;
     });
   };
-  
+
   // Auto-scroll the carousel
   useEffect(() => {
     const interval = setInterval(nextSlide, 5000); // Change slide every 5 seconds
