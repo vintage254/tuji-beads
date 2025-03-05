@@ -2,18 +2,19 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
 import { AiOutlineMinus, AiOutlinePlus, AiOutlineLeft, AiOutlineShopping } from 'react-icons/ai';
 import { TiDeleteOutline } from 'react-icons/ti';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 
 import { useStateContext } from '../context/StateContext';
-import { urlFor, client } from '../lib/client';
+import { urlFor } from '../lib/client';
 
 const Cart = () => {
   const cartRef = React.useRef();
   const router = useRouter();
+  const pathname = usePathname();
   const { totalPrice, totalQuantities, cartItems, setShowCart, toggleCartItemQuantity, onRemove, setCartItems, setTotalPrice, setTotalQuantities } = useStateContext();
 
   const { user, setShowAuth } = useStateContext();
@@ -28,75 +29,34 @@ const Cart = () => {
     if (!user) {
       toast.error('Please sign in to place an order');
       setShowCart(false);
-      // Redirect to auth page with return URL
-      router.push({
-        pathname: '/auth',
-        query: { returnUrl: router.asPath }
-      });
+      setShowAuth(true);
       return;
     }
     
     try {
-      // Create order in Sanity
-      const orderItems = cartItems.map(item => ({
-        product: {
-          _type: 'reference',
-          _ref: item._id
+      // Create order through API route
+      const response = await fetch('/api/orders/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
         },
-        quantity: item.quantity,
-        price: item.price
-      }));
-      
-      const orderDoc = {
-        _type: 'order',
-        user: {
-          _type: 'reference',
-          _ref: user._id
-        },
-        orderItems,
-        totalAmount: totalPrice,
-        status: 'pending',
-        orderDate: new Date().toISOString()
-      };
-      
-      // Create order in Sanity
-      const createdOrder = await client.create(orderDoc);
-      
-      // Send email notification to admin
-      try {
-        // Call the email API endpoint
-        await fetch('/api/send-order-email', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            to: 'derricknjuguna414@gmail.com',
-            subject: `New Order from ${user.name}`,
-            orderDetails: {
-              orderId: createdOrder._id,
-              customer: {
-                name: user.name,
-                email: user.email,
-                phone: user.phoneNumber
-              },
-              items: cartItems.map(item => ({
-                name: item.name,
-                quantity: item.quantity,
-                price: item.price
-              })),
-              totalAmount: totalPrice,
-              orderDate: new Date().toISOString()
-            }
-          })
-        });
-      } catch (emailError) {
-        console.error('Failed to send email notification:', emailError);
-        // Continue with order process even if email fails
+        body: JSON.stringify({
+          items: cartItems.map(item => ({
+            productId: item._id,
+            quantity: item.quantity,
+            price: item.price
+          })),
+          totalAmount: totalPrice,
+          userId: user._id
+        })
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.message || 'Failed to create order');
       }
-      
-      // Order items text for reference (WhatsApp message removed)
-      const orderItemsText = cartItems.map(item => 
-        `${item.name} (${item.quantity} x KSH ${item.price})`
-      ).join('\n');
+
+      const createdOrder = await response.json();
       
       // Clear cart
       setCartItems([]);
@@ -107,15 +67,12 @@ const Cart = () => {
       toast.success('Order placed successfully! We will contact you shortly.');
       
       // Close cart and redirect to order history page
-      setTimeout(() => {
-        setShowCart(false);
-        
-        // Navigate directly to order history page without WhatsApp
-        router.push('/order-history');
-      }, 1000);
+      setShowCart(false);
+      router.push('/order-history');
+      
     } catch (error) {
       console.error('Error creating order:', error);
-      toast.error('Failed to place order. Please try again.');
+      toast.error(error.message || 'Failed to place order. Please try again.');
     }
   };
 
@@ -200,13 +157,12 @@ const Cart = () => {
               >
                 <span>Make Order</span>
               </button>
-              <p className="order-note">We&apos;ll contact you via WhatsApp to confirm your order</p>
             </div>
           </div>
         )}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Cart
+export default Cart;
