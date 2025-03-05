@@ -41,6 +41,7 @@ export const StateContext = ({ children }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ email, password }),
+        credentials: 'include', // Important for cookies to be sent/received
       });
 
       const data = await response.json();
@@ -49,10 +50,18 @@ export const StateContext = ({ children }) => {
         throw new Error(data.error || 'Login failed');
       }
 
+      // Store user in state and localStorage
       setUser(data.user);
-      setToken(data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('token', data.token);
+      
+      // Store token in both state and localStorage for client-side access
+      if (data.token) {
+        setToken(data.token);
+        localStorage.setItem('token', data.token);
+        console.log('Token stored in localStorage and state');
+      } else {
+        console.warn('No token received from login response');
+      }
 
       return data.user;
     } catch (error) {
@@ -69,6 +78,7 @@ export const StateContext = ({ children }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(userData),
+        credentials: 'include', // Important for cookies to be sent/received
       });
 
       const data = await response.json();
@@ -77,10 +87,18 @@ export const StateContext = ({ children }) => {
         throw new Error(data.error || 'Registration failed');
       }
 
+      // Store user in state and localStorage
       setUser(data.user);
-      setToken(data.token);
       localStorage.setItem('user', JSON.stringify(data.user));
-      localStorage.setItem('token', data.token);
+      
+      // Store token in both state and localStorage for client-side access
+      if (data.token) {
+        setToken(data.token);
+        localStorage.setItem('token', data.token);
+        console.log('Token stored in localStorage and state after registration');
+      } else {
+        console.warn('No token received from registration response');
+      }
 
       return data.user;
     } catch (error) {
@@ -117,21 +135,29 @@ export const StateContext = ({ children }) => {
       // If found in localStorage but not in state, update state
       if (currentToken) {
         setToken(currentToken);
+        console.log('Token retrieved from localStorage');
       } else {
+        console.error('No authentication token available in state or localStorage');
         throw new Error('No authentication token available. Please sign in again.');
       }
     }
 
+    // Prepare headers with token
     const headers = {
       'Content-Type': 'application/json',
       ...options.headers,
       'Authorization': `Bearer ${currentToken}`
     };
 
+    console.log('Making authenticated request to:', url);
+    console.log('Authorization header present:', !!headers['Authorization']);
+
     try {
+      // Include credentials to send cookies
       const response = await fetch(url, {
         ...options,
-        headers
+        headers,
+        credentials: 'include' // Important for cookies to be sent
       });
       
       // Handle authentication errors
@@ -143,6 +169,9 @@ export const StateContext = ({ children }) => {
         if (typeof window !== 'undefined') {
           localStorage.removeItem('token');
           setToken(null);
+          // Also clear user data on auth failure
+          localStorage.removeItem('user');
+          setUser(null);
         }
         
         throw new Error('Authentication failed. Please sign in again.');

@@ -59,9 +59,10 @@ export async function POST(request) {
     // Set cookie with the token
     const response = NextResponse.json({
       user: userWithoutPassword,
-      token
+      token  // Include token in response body for client-side storage
     });
 
+    // Set HTTP-only cookie for server-side auth
     response.cookies.set({
       name: 'auth_token',
       value: token,
@@ -71,6 +72,19 @@ export async function POST(request) {
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/'
     });
+    
+    // Set a non-HTTP-only cookie for client-side detection of login state
+    response.cookies.set({
+      name: 'auth_status',
+      value: 'logged_in',
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 60 * 60 * 24 * 7, // 7 days
+      path: '/'
+    });
+    
+    console.log('User registered successfully with token');
 
     return response;
   } catch (error) {

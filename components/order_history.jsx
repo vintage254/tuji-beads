@@ -47,15 +47,32 @@ const OrderHistory = ({ userId }) => {
 
       try {
         setLoading(true);
-        // Get the auth token from cookies
-        const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-          const [key, value] = cookie.trim().split('=');
-          acc[key] = value;
-          return acc;
-        }, {});
         
-        const authToken = cookies['auth_token'];
+        // Try to get token from multiple sources
+        let authToken;
+        
+        // First try localStorage
+        if (typeof window !== 'undefined') {
+          authToken = localStorage.getItem('token');
+        }
+        
+        // If not in localStorage, try cookies
+        if (!authToken) {
+          const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+            const [key, value] = cookie.trim().split('=');
+            acc[key] = value;
+            return acc;
+          }, {});
+          
+          // Check for auth_token cookie
+          if (cookies['auth_token']) {
+            authToken = cookies['auth_token'];
+          }
+        }
+        
+        // Prepare headers with token if available
         const headers = authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
+        console.log('Using auth token:', !!authToken);
         
         const response = await fetch(`/api/orders?userId=${userId}`, { headers });
         
