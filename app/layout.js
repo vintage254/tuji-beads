@@ -1,6 +1,6 @@
 export const metadata = {
-  title: 'Studio',
-  description: 'Tuji Beads Studio',
+  title: 'Tuji Beads',
+  description: 'Tuji Beads Application',
 };
 
 export default function RootLayout({ children }) {
