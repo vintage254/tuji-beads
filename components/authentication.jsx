@@ -1,8 +1,8 @@
 'use client';
 
 import React, { useState } from 'react';
-import { client } from '../lib/client';
-import { useRouter } from 'next/router';
+import { authClient } from '../lib/client';
+import { useRouter } from 'next/navigation';
 import { useStateContext } from '../context/StateContext';
 import { AiOutlineMail, AiOutlineLock } from 'react-icons/ai';
 import { toast } from 'react-hot-toast';
@@ -11,18 +11,26 @@ const Authentication = ({ setShowAuth }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
   const { setUser } = useStateContext();
 
   const handleLogin = async (e) => {
     e.preventDefault();
     setError('');
+    setIsLoading(true);
     
     try {
-      const query = `*[_type == "user" && email == $email][0]`;
-      const params = { email };
+      const query = `*[_type == "user" && email == $email][0] {
+        _id,
+        _type,
+        name,
+        email,
+        password
+      }`;
+      const params = { email: email.trim() };
       
-      const user = await client.fetch(query, params);
+      const user = await authClient.fetch(query, params);
       
       if (!user) {
         setError('User not found');
@@ -34,21 +42,32 @@ const Authentication = ({ setShowAuth }) => {
         return;
       }
 
-      setUser(user);
-      localStorage.setItem('user', JSON.stringify(user));
+      // Remove password before storing
+      const { password: _, ...userWithoutPassword } = user;
+      
+      setUser(userWithoutPassword);
+      localStorage.setItem('user', JSON.stringify(userWithoutPassword));
       toast.success('Login successful!');
       setShowAuth(false);
-      router.push('/');
+      router.refresh(); // Refresh the current route
     } catch (err) {
       console.error('Authentication error:', err);
-      setError('An error occurred during authentication');
+      setError('An error occurred during authentication. Please try again.');
+      toast.error('Authentication failed');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <div className="auth-wrapper">
       <div className="auth-container">
-        <button type='button' className='auth-close-btn' onClick={() => setShowAuth(false)}>
+        <button 
+          type='button' 
+          className='auth-close-btn' 
+          onClick={() => setShowAuth(false)}
+          disabled={isLoading}
+        >
           ×
         </button>
         
@@ -67,6 +86,7 @@ const Authentication = ({ setShowAuth }) => {
               value={email} 
               onChange={(e) => setEmail(e.target.value)} 
               required 
+              disabled={isLoading}
             />
           </div>
           <div className="form-group">
@@ -81,10 +101,15 @@ const Authentication = ({ setShowAuth }) => {
               value={password} 
               onChange={(e) => setPassword(e.target.value)} 
               required 
+              disabled={isLoading}
             />
           </div>
-          <button type="submit" className="auth-button">
-            Login
+          <button 
+            type="submit" 
+            className="auth-button"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Logging in...' : 'Login'}
           </button>
         </form>
       </div>
