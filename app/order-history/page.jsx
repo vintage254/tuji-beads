@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 
 // Import the fallback component
-const OrderHistoryFallback = dynamic(() => import('../../components/OrderHistoryFallback'), {
+const OrderHistoryFallback = dynamicImport(() => import('../../components/OrderHistoryFallback'), {
   ssr: false,
   loading: () => <div>Loading...</div>
 });
@@ -53,7 +53,9 @@ export default function OrderHistoryPage() {
         throw new Error('Authentication required');
       }
 
-      const response = await fetch('/api/orders', {
+      // Add user ID to query params
+      const userId = user._id;
+      const response = await fetch(`/api/orders?userId=${userId}`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${user.token}`,

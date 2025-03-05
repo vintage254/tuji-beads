@@ -78,4 +78,28 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+### Deployment Instructions
+
+1. Create a Vercel account if you don't have one already
+2. Connect your GitHub repository to Vercel
+3. Configure the following environment variables in your Vercel project settings:
+   - `NEXT_PUBLIC_SANITY_PROJECT_ID`
+   - `NEXT_PUBLIC_SANITY_DATASET`
+   - `NEXT_PUBLIC_SANITY_API_VERSION`
+   - `SANITY_API_TOKEN`
+   - `JWT_SECRET`
+   - `GMAIL_USER` (if using email notifications)
+   - `GMAIL_APP_PASSWORD` (if using email notifications)
+
+4. Deploy your project using the Vercel dashboard or CLI
+
+### Troubleshooting Deployment Issues
+
+If you encounter issues during deployment:
+
+1. **Client/Server Component Issues**: Ensure components are properly marked with 'use client' directive when they use client-side features
+2. **API Route Errors**: Check that API routes are properly formatted for the App Router
+3. **Edge Runtime Compatibility**: Some features may not be compatible with Edge runtime - check Vercel logs for details
+4. **Data Serialization Errors**: Ensure all data passed between server and client components is serializable
+
+For more detailed deployment instructions, see [Next.js deployment documentation](https://nextjs.org/docs/deployment).

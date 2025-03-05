@@ -16,6 +16,11 @@ const nextConfig = {
   swcMinify: false,
   // Increase static generation timeout
   staticPageGenerationTimeout: 180,
+  // Add experimental configuration to help with Edge compatibility
+  experimental: {
+    // Enable serverActions
+    serverActions: true,
+  },
 }
 
 module.exports = nextConfig
