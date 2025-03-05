@@ -66,7 +66,7 @@ const OrderHistory = ({ userId }) => {
       <div className="no-orders">
         <FaShoppingBag size={50} />
         <h3>No orders yet</h3>
-        <p>You haven't placed any orders yet.</p>
+        <p>You haven&apos;t placed any orders yet.</p>
         <Link href="/">
           <button type="button" className="btn">
             Continue Shopping

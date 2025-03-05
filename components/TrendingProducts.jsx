@@ -43,7 +43,7 @@ const TrendingProducts = ({ products }) => {
     if (trendingProducts.length > 0) {
       updateVisibleProducts(currentIndex);
     }
-  }, [currentIndex, productsPerSlide, trendingProducts]);
+  }, [currentIndex, productsPerSlide, trendingProducts, updateVisibleProducts]);
 
   const updateVisibleProducts = useCallback((index) => {
     const start = index;
