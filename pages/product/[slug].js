@@ -19,25 +19,34 @@ const ProductDetails = ({ product, products }) => {
     }
 
     const { image, name, details, price } = product;
+    
+    // Generate image URLs safely
+    const getImageUrl = (img) => {
+        if (!img) return '';
+        const url = urlFor(img);
+        return url || '';
+    };
 
     return (
         <div>
             <div className="product-detail-container">
                 <div>
                     <div className="image-container">
-                        <Image 
-                            src={urlFor(image && image[index]).url()} 
-                            alt={name} 
-                            width={400}
-                            height={400}
-                            className="product-detail-image" 
-                        />
+                        {image && image[index] && (
+                            <Image 
+                                src={getImageUrl(image[index])} 
+                                alt={name || 'Product image'} 
+                                width={400}
+                                height={400}
+                                className="product-detail-image" 
+                            />
+                        )}
                     </div>
                     <div className="small-images-container">
                         {image?.map((item, i) => (
                             <Image 
                                 key={i} 
-                                src={urlFor(item).url()}
+                                src={getImageUrl(item)}
                                 alt={`Product ${i+1}`} 
                                 width={200}
                                 height={200}
@@ -88,10 +97,10 @@ const ProductDetails = ({ product, products }) => {
                 <h2>You may also like</h2>
                 <div className="marquee">
                     <div className="maylike-products-container track">
-                        {products.map((item) => (
+                        {products?.map((item) => (
                             <Product key={item._id} product={item} />
                         ))}
-                        {products.map((item) => (
+                        {products?.map((item) => (
                             <Product key={`${item._id}-duplicate`} product={item} />
                         ))}
                     </div>
