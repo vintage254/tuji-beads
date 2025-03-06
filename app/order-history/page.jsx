@@ -2,12 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import dynamic from 'next/dynamic';
+import dynamicImport from 'next/dynamic';
 import { useStateContext } from '../../context/StateContext';
 import { FiRefreshCw } from 'react-icons/fi';
 
 // Import the fallback component
-const OrderHistoryFallback = dynamic(() => import('../../components/OrderHistoryFallback'), {
+const OrderHistoryFallback = dynamicImport(() => import('../../components/OrderHistoryFallback'), {
   ssr: false,
   loading: () => <div>Loading...</div>
 });
