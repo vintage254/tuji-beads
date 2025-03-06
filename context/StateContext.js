@@ -284,7 +284,7 @@ export const StateContext = ({ children }) => {
         logout,
         isAuthenticated,
         authenticatedFetch,
-        token
+        sessionId
       }}
     >
       {children}
