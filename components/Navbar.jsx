@@ -44,6 +44,15 @@ const Navbar = () => {
     }
   }, []);
   
+  useEffect(() => {
+    console.log('Mobile menu state changed:', mobileMenuOpen);
+    
+    // Apply body scroll lock when menu is open
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
+    }
+  }, [mobileMenuOpen]);
+  
   const handleSignIn = () => {
     setShowAuth(true);
     setMobileMenuOpen(false);
@@ -82,7 +91,7 @@ const Navbar = () => {
         {isMobile && (
           <div className="mobile-menu-toggle" style={{ 
             position: 'absolute', 
-            right: '70px', 
+            right: '15px', 
             top: '50%', 
             transform: 'translateY(-50%)',
             zIndex: 1001,
@@ -178,19 +187,20 @@ const Navbar = () => {
           </div>
         )}
         
-        {/* Mobile Cart Icon and Menu Toggle - always show on mobile */}
+        {/* Mobile Cart Icon - only show on mobile when menu is closed */}
         {isMobile && (
-          <div className="mobile-nav-controls">
+          <div className="mobile-nav-controls" style={{
+            position: 'absolute',
+            right: '60px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '10px'
+          }}>
             <button type="button" className="cart-icon" onClick={() => setShowCart(true)}>
               <AiOutlineShopping />
               <span className="cart-item-qty">{totalQuantities || 0}</span>
-            </button>
-            <button 
-              onClick={toggleMobileMenu} 
-              aria-label="Toggle menu" 
-              className="mobile-menu-btn"
-            >
-              <AiOutlineMenu size={24} />
             </button>
           </div>
         )}

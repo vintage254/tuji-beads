@@ -27,7 +27,7 @@ const Reviews = () => {
       avatar: '/review-avatar-3.png',
       rating: 5,
       date: 'March 2, 2025',
-      text: 'Tuji Beads has the best selection I\'ve found. The customer service was also excellent when I had questions about my order.',
+      text: 'Beads charm has the best selection I\'ve found. The customer service was also excellent when I had questions about my order.',
     },
   ];
 
