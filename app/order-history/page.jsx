@@ -2,10 +2,12 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import dynamicImport from 'next/dynamic';
+import dynamic from 'next/dynamic';
+import { useStateContext } from '../../context/StateContext';
+import { FiRefreshCw } from 'react-icons/fi';
 
 // Import the fallback component
-const OrderHistoryFallback = dynamicImport(() => import('../../components/OrderHistoryFallback'), {
+const OrderHistoryFallback = dynamic(() => import('../../components/OrderHistoryFallback'), {
   ssr: false,
   loading: () => <div>Loading...</div>
 });
@@ -17,110 +19,106 @@ export const runtime = 'edge';
 // Simple client-only component
 export default function OrderHistoryPage() {
   const [isLoading, setIsLoading] = useState(true);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [orders, setOrders] = useState([]);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const router = useRouter();
+  const { isAuthenticated, authenticatedFetch } = useStateContext();
 
   useEffect(() => {
     // Check if we're in the browser environment
     if (typeof window === 'undefined') return;
 
-    try {
-      // Get user from localStorage
-      const storedUser = localStorage.getItem('user');
-      const storedEmail = localStorage.getItem('userEmail');
-      
-      // Check for session cookie
-      const hasCookie = document.cookie.includes('user_session=');
-      
-      if (!hasCookie) {
-        setError('Please log in to view your order history');
-        setIsLoading(false);
-        return;
-      }
-      
-      let userData = null;
-      
-      if (storedUser) {
-        try {
-          userData = JSON.parse(storedUser);
-        } catch (parseError) {
-          console.error('Error parsing stored user:', parseError);
+    const initializeOrderHistory = async () => {
+      try {
+        // Check authentication status
+        if (!isAuthenticated()) {
+          console.log('User is not authenticated, redirecting to login');
+          setError('Please log in to view your order history');
+          setIsLoading(false);
+          return;
         }
-      }
-      
-      // If we don't have a full user object but have an email, create a minimal user object
-      if (!userData && storedEmail) {
-        userData = { email: storedEmail };
-      }
-      
-      if (!userData) {
-        setError('Please log in to view your order history');
-        setIsLoading(false);
-        return;
-      }
-      
-      setUser(userData);
 
-      // Fetch orders
-      fetchOrders(userData);
-    } catch (err) {
-      console.error('Error initializing order history:', err);
-      setError('An error occurred while loading your order history');
-      setIsLoading(false);
-    }
+        // Get user from context or localStorage
+        const storedUser = localStorage.getItem('user');
+        let userData = null;
+        
+        if (storedUser) {
+          try {
+            userData = JSON.parse(storedUser);
+            console.log('User loaded from localStorage:', userData.email);
+          } catch (parseError) {
+            console.error('Error parsing stored user:', parseError);
+          }
+        }
+        
+        // If we don't have a full user object but have an email, create a minimal user object
+        if (!userData || !userData.email) {
+          const storedEmail = localStorage.getItem('userEmail');
+          if (storedEmail) {
+            userData = { email: storedEmail };
+            console.log('Created minimal user object from email:', storedEmail);
+          }
+        }
+        
+        if (userData && userData.email) {
+          setUser(userData);
+          console.log('User set for order history:', userData);
+          // Fetch orders
+          await fetchOrders();
+        } else {
+          console.error('No user data found despite being authenticated');
+          setError('User information is incomplete. Please try logging in again.');
+          setIsLoading(false);
+        }
+      } catch (err) {
+        console.error('Error initializing order history:', err);
+        setError('An error occurred while loading your order history');
+        setIsLoading(false);
+      }
+    };
+
+    initializeOrderHistory();
   }, []);
 
-  const fetchOrders = async (user) => {
+  const fetchOrders = async () => {
     try {
-      if (!user) {
+      if (!isAuthenticated()) {
         throw new Error('Authentication required');
       }
 
-      // Add user ID or email to query params
-      const params = new URLSearchParams();
-      if (user._id) {
-        params.append('userId', user._id);
-      } else if (user.email) {
-        params.append('email', user.email);
-      } else {
-        throw new Error('User ID or email is required');
-      }
+      console.log('Fetching orders for authenticated user');
+      setIsLoading(true);
       
-      // Use credentials: 'include' to send cookies with the request
-      const response = await fetch(`/api/orders?${params.toString()}`, {
+      // Use authenticatedFetch to ensure proper authentication handling
+      const response = await authenticatedFetch('/api/orders', {
         method: 'GET',
         headers: {
           'Content-Type': 'application/json',
         },
-        credentials: 'include', // Important for sending session cookies
+        // Add cache busting parameter to prevent browser caching
+        cache: 'no-store',
       });
 
+      console.log('Orders API response status:', response.status);
+      
       if (!response.ok) {
-        throw new Error(`Error fetching orders: ${response.statusText}`);
+        const errorData = await response.json().catch(() => ({}));
+        console.error('Error response from orders API:', errorData);
+        throw new Error(errorData.error || `Error fetching orders: ${response.statusText}`);
       }
 
       const data = await response.json();
+      console.log(`Received ${data.length} orders from API`);
       
-      // Simple sanitization to ensure data is serializable
-      const sanitizedOrders = data.map(order => ({
-        _id: order._id || 'unknown',
-        orderNumber: order.orderNumber || 'unknown',
-        createdAt: order.createdAt || new Date().toISOString(),
-        status: order.status || 'processing',
-        total: order.total || 0,
-        items: (order.items || []).map(item => ({
-          _id: item._id || 'unknown',
-          product: {
-            name: item.product?.name || 'Product name unavailable',
-            price: item.product?.price || 0,
-          },
-          quantity: item.quantity || 1,
-        })),
-      }));
-
-      setOrders(sanitizedOrders);
+      // Sort orders by date (newest first) in case the API doesn't
+      const sortedOrders = [...data].sort((a, b) => {
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+      
+      setOrders(sortedOrders);
+      setError(null); // Clear any previous errors
       setIsLoading(false);
     } catch (err) {
       console.error('Error fetching orders:', err);
@@ -129,9 +127,32 @@ export default function OrderHistoryPage() {
     }
   };
 
+  // Handle refresh button click
+  const handleRefresh = async () => {
+    if (isRefreshing) return;
+    
+    setIsRefreshing(true);
+    try {
+      // Check authentication again before refreshing
+      if (!isAuthenticated()) {
+        throw new Error('Authentication required');
+      }
+      
+      await fetchOrders();
+      // Reset error state in case previous errors are resolved
+      setError(null);
+      console.log('Orders refreshed successfully');
+    } catch (err) {
+      console.error('Error refreshing orders:', err);
+      setError(err.message || 'Failed to refresh orders');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
   // If there's an error, show the fallback component
   if (error) {
-    return <OrderHistoryFallback />;
+    return <OrderHistoryFallback error={error} onRetry={handleRefresh} />;
   }
 
   // Loading state
@@ -194,7 +215,43 @@ export default function OrderHistoryPage() {
       margin: '0 auto',
       fontFamily: 'Arial, sans-serif'
     }}>
-      <h1 style={{ fontSize: '24px', marginBottom: '20px' }}>Order History</h1>
+      <div style={{ 
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginBottom: '20px'
+      }}>
+        <h1 style={{ fontSize: '24px', margin: 0 }}>Order History</h1>
+        <button 
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '5px',
+            padding: '8px 15px',
+            backgroundColor: '#4a4a4a',
+            color: 'white',
+            border: 'none',
+            borderRadius: '4px',
+            fontSize: '14px',
+            cursor: isRefreshing ? 'not-allowed' : 'pointer',
+            opacity: isRefreshing ? 0.7 : 1
+          }}
+        >
+          <FiRefreshCw style={{ 
+            animation: isRefreshing ? 'spin 1s linear infinite' : 'none' 
+          }} />
+          {isRefreshing ? 'Refreshing...' : 'Refresh'}
+        </button>
+      </div>
+      
+      <style jsx global>{`
+        @keyframes spin {
+          0% { transform: rotate(0deg); }
+          100% { transform: rotate(360deg); }
+        }
+      `}</style>
       
       {orders.map((order) => (
         <div 

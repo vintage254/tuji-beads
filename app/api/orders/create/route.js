@@ -68,115 +68,96 @@ export async function POST(request) {
       );
     }
     
-    // Find or create user in Sanity
+    // Find the user by session ID
     let userIdToUse = userId;
+    let userEmailToUse = emailToUse;
     
-    // If we only have email, find the user by email
-    if (!userIdToUse && emailToUse) {
-      try {
-        // Check if the session is valid for this user
-        console.log('Checking session validity for email:', emailToUse, 'sessionId:', sessionId);
+    try {
+      // Find the user by their session ID (most reliable method)
+      console.log('Finding user by session ID:', sessionId);
+      
+      const userWithSession = await client.fetch(
+        `*[_type == "user" && count(sessions[sessionId == $sessionId]) > 0][0]{ 
+          _id, 
+          email, 
+          sessions 
+        }`,
+        { sessionId }
+      );
+      
+      if (!userWithSession) {
+        console.error('No user found with this session ID');
         
-        // First, get the user and their sessions to debug
-        const userWithSessions = await client.fetch(
-          `*[_type == "user" && email == $email][0]{ _id, email, sessions }`,
-          { email: emailToUse }
-        );
-        
-        console.log('User sessions from Sanity:', JSON.stringify(userWithSessions?.sessions || []));
-        
-        // Now check if any session matches
-        const userWithSession = userWithSessions && userWithSessions.sessions && 
-          userWithSessions.sessions.some(session => session.sessionId === sessionId) ? 
-          userWithSessions : null;
-        
-        console.log('Session validation result:', userWithSession ? 'Valid session found' : 'No valid session found');
-        
-        if (!userWithSession) {
-          console.error('Invalid session for user');
+        // If we have a userId or email from the request, try to use that as fallback
+        if (userId) {
+          console.log('Using provided userId as fallback:', userId);
+          // Verify the user exists
+          const userExists = await client.fetch(
+            `*[_type == "user" && _id == $userId][0]._id`,
+            { userId }
+          );
           
-          // Try a fallback approach - just use the user we found
-          if (userWithSessions && userWithSessions._id) {
-            console.log('Using fallback authentication - user exists but session not found');
-            userIdToUse = userWithSessions._id;
-            
-            // Log the session details for debugging
-            if (userWithSessions.sessions) {
-              console.log('Available sessions:', userWithSessions.sessions.length);
-              userWithSessions.sessions.forEach((session, index) => {
-                console.log(`Session ${index}:`, session.sessionId, 
-                  'matches:', session.sessionId === sessionId);
-              });
-              
-              // Try to update the user's sessions with the current session ID
-              // This helps fix session synchronization issues
-              try {
-                await client.patch(userWithSessions._id)
-                  .setIfMissing({ sessions: [] })
-                  .append('sessions', [{ 
-                    sessionId: sessionId,
-                    createdAt: new Date().toISOString(),
-                    lastActive: new Date().toISOString()
-                  }])
-                  .commit();
-                  
-                console.log('Added current session ID to user document');
-              } catch (sessionUpdateError) {
-                console.error('Failed to update user sessions:', sessionUpdateError);
-                // Continue anyway, not critical
-              }
-            }
-          } else {
+          if (!userExists) {
+            console.error('Provided userId does not exist in database');
             return NextResponse.json(
-              { error: 'Invalid session' },
-              { status: 401 }
+              { error: 'Invalid user ID' },
+              { status: 400 }
             );
           }
-        } else {
-          // Use the verified user's ID
-          userIdToUse = userWithSession._id;
-          console.log('User authenticated via session:', userIdToUse);
+        } else if (emailToUse) {
+          console.log('Using provided email as fallback:', emailToUse);
+          // Try to find user by email
+          const userByEmail = await client.fetch(
+            `*[_type == "user" && email == $email][0]._id`,
+            { email: emailToUse }
+          );
           
-          // Update the session's lastActive timestamp
-          try {
-            const updatedSessions = userWithSession.sessions.map(session => {
-              if (session.sessionId === sessionId) {
-                return {
-                  ...session,
-                  lastActive: new Date().toISOString()
-                };
-              }
-              return session;
-            });
-            
-            await client.patch(userWithSession._id)
-              .set({ sessions: updatedSessions })
-              .commit();
-              
-            console.log('Updated session lastActive timestamp');
-          } catch (sessionUpdateError) {
-            console.error('Failed to update session timestamp:', sessionUpdateError);
-            // Continue anyway, not critical
+          if (userByEmail) {
+            userIdToUse = userByEmail;
+            console.log('Found user by email:', userIdToUse);
+          } else {
+            console.log('No user found with provided email, will create order with email reference only');
           }
-        }
-      } catch (sessionError) {
-        console.error('Error verifying session:', sessionError);
-      }
-      
-      // If we still don't have a user ID, try to find by email
-      if (!userIdToUse) {
-        const existingUser = await client.fetch(
-          `*[_type == "user" && email == $email][0]._id`,
-          { email: emailToUse }
-        );
-        
-        if (existingUser) {
-          userIdToUse = existingUser;
         } else {
-          // User doesn't exist, but we'll create the order anyway and link by email
-          console.log('User not found in database, creating order with email reference');
+          return NextResponse.json(
+            { error: 'Authentication failed. Please sign in again.' },
+            { status: 401 }
+          );
+        }
+      } else {
+        // Use the verified user's ID and email
+        userIdToUse = userWithSession._id;
+        userEmailToUse = userWithSession.email;
+        console.log('User authenticated via session:', userIdToUse, userEmailToUse);
+        
+        // Update the session's lastActive timestamp
+        try {
+          const updatedSessions = userWithSession.sessions.map(session => {
+            if (session.sessionId === sessionId) {
+              return {
+                ...session,
+                lastActive: new Date().toISOString()
+              };
+            }
+            return session;
+          });
+          
+          await client.patch(userWithSession._id)
+            .set({ sessions: updatedSessions })
+            .commit();
+            
+          console.log('Updated session lastActive timestamp');
+        } catch (sessionUpdateError) {
+          console.error('Failed to update session timestamp:', sessionUpdateError);
+          // Continue anyway, not critical
         }
       }
+    } catch (sessionError) {
+      console.error('Error verifying session:', sessionError);
+      return NextResponse.json(
+        { error: 'Authentication error' },
+        { status: 500 }
+      );
     }
 
     // Create order document
@@ -188,9 +169,9 @@ export async function POST(request) {
           _type: 'reference',
           _ref: userIdToUse
         }
-      } : {
-        userEmail: email // Store email directly if no user ID
-      }),
+      } : {}),
+      // Always store email for redundancy and easier querying
+      userEmail: userEmailToUse || email,
       orderItems: items.map(item => ({
         product: {
           _type: 'reference',

@@ -14,6 +14,7 @@ const Navbar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
   const [scrolled, setScrolled] = useState(false);
+  const isMobile = windowWidth <= 768;
   
   // Handle window resize and scroll
   useEffect(() => {
@@ -35,6 +36,7 @@ const Navbar = () => {
     if (typeof window !== 'undefined') {
       window.addEventListener('resize', handleResize);
       window.addEventListener('scroll', handleScroll);
+      handleResize(); // Initialize on mount
       return () => {
         window.removeEventListener('resize', handleResize);
         window.removeEventListener('scroll', handleScroll);
@@ -60,52 +62,66 @@ const Navbar = () => {
           </Link>
         </div>
         
-        {/* Mobile menu toggle button */}
-        <div className="mobile-menu-toggle">
-          <button onClick={toggleMobileMenu} aria-label="Toggle menu">
-            {mobileMenuOpen ? <AiOutlineClose size={24} /> : <AiOutlineMenu size={24} />}
-          </button>
-        </div>
-        
-        {/* Desktop Navigation Links */}
-        <div className={`nav-links desktop-nav`}>
-          <div style={{ display: 'flex', gap: '15px' }}>
-            <Link href="/">Home</Link>
-            <Link href="/products">Products</Link>
-            <Link href="/about">About Us</Link>
-            {user && (
-              <Link href="/order-history">Order History</Link>
-            )}
-          </div>
-        </div>
-        
-        {/* Desktop Nav Buttons */}
-        <div className="nav-buttons desktop-nav">
-          {user ? (
-            <div className="user-menu">
-              <span className="user-name">
-                <AiOutlineUser />
-                <span className="user-name-text">{user.name}</span>
-              </span>
-              <button type="button" className="logout-button" onClick={() => {
-                logout();
-                router.push('/');
-              }}>
-                <AiOutlineLogout />
-                <span>Logout</span>
-              </button>
-            </div>
-          ) : (
-            <button type="button" className="auth-button" onClick={handleSignIn}>
-              <AiOutlineUser />
-              <span>Sign In</span>
+        {/* Mobile menu toggle button - only show on mobile */}
+        {isMobile && (
+          <div className="mobile-menu-toggle">
+            <button onClick={toggleMobileMenu} aria-label="Toggle menu">
+              {mobileMenuOpen ? <AiOutlineClose size={24} /> : <AiOutlineMenu size={24} />}
             </button>
-          )}
+          </div>
+        )}
+        
+        {/* Desktop Navigation Links - only show on desktop */}
+        {!isMobile && (
+          <div className="nav-links desktop-nav">
+            <div style={{ display: 'flex', gap: '15px' }}>
+              <Link href="/">Home</Link>
+              <Link href="/products">Products</Link>
+              <Link href="/about">About Us</Link>
+              {user && (
+                <Link href="/order-history">Order History</Link>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Desktop Nav Buttons - only show on desktop */}
+        {!isMobile && (
+          <div className="nav-buttons desktop-nav">
+            {user ? (
+              <div className="user-menu">
+                <span className="user-name">
+                  <AiOutlineUser />
+                  <span className="user-name-text">{user.name || user.email}</span>
+                </span>
+                <button type="button" className="logout-button" onClick={() => {
+                  logout();
+                  router.push('/');
+                }}>
+                  <AiOutlineLogout />
+                  <span>Logout</span>
+                </button>
+              </div>
+            ) : (
+              <button type="button" className="auth-button" onClick={handleSignIn}>
+                <AiOutlineUser />
+                <span>Sign In</span>
+              </button>
+            )}
+            <button type="button" className="cart-icon" onClick={() => setShowCart(true)}>
+              <AiOutlineShopping />
+              <span className="cart-item-qty">{totalQuantities || 0}</span>
+            </button>
+          </div>
+        )}
+        
+        {/* Mobile Cart Icon - only show on mobile when menu is closed */}
+        {isMobile && !mobileMenuOpen && (
           <button type="button" className="cart-icon" onClick={() => setShowCart(true)}>
             <AiOutlineShopping />
             <span className="cart-item-qty">{totalQuantities || 0}</span>
           </button>
-        </div>
+        )}
         
         {/* Mobile Navigation Menu */}
         <div className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`}>
@@ -131,7 +147,7 @@ const Navbar = () => {
                   <div className="user-menu-mobile">
                     <span className="user-name-mobile">
                       <AiOutlineUser />
-                      <span>{user.name}</span>
+                      <span>{user.name || user.email}</span>
                     </span>
                   </div>
                   <button type="button" className="logout-button-mobile" onClick={() => {

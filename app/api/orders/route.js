@@ -7,6 +7,8 @@ export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
+    console.log('=== ORDERS API CALLED ===');
+    
     // Get session ID from cookies
     const cookieStore = cookies();
     const sessionId = cookieStore.get('user_session')?.value;
@@ -27,64 +29,57 @@ export async function GET(request) {
       );
     }
     
-    // Get the user identifier from the query parameter (can be ID or email)
-    const { searchParams } = new URL(request.url);
-    const userId = searchParams.get('userId');
-    const email = searchParams.get('email') || userEmailFromCookie;
-    
-    // We need either userId or email
-    if (!userId && !email) {
-      return NextResponse.json(
-        { error: 'User ID or email is required' },
-        { status: 400 }
-      );
-    }
-    
     // Verify the session is valid for this user
-    let sessionValid = false;
+    let userIdToUse = null;
+    let userEmail = null;
+    
     try {
-      console.log('Checking session validity for:', { userId, email, sessionId });
+      console.log('Validating session:', { sessionId });
       
-      // First, get the user and their sessions to debug
+      // First, find the user by their session ID
       const userWithSessions = await client.fetch(
-        `*[_type == "user" && ((_id == $userId) || (email == $email))][0]{ _id, email, sessions }`,
-        { userId, email }
+        `*[_type == "user" && count(sessions[sessionId == $sessionId]) > 0][0]{ 
+          _id, 
+          email, 
+          sessions 
+        }`,
+        { sessionId }
       );
       
-      console.log('User sessions from Sanity:', JSON.stringify(userWithSessions?.sessions || []));
+      if (!userWithSessions) {
+        console.error('No user found with this session ID');
+        return NextResponse.json(
+          { error: 'Invalid session' },
+          { status: 401 }
+        );
+      }
       
-      // Now check if any session matches
-      const userWithSession = userWithSessions && userWithSessions.sessions && 
-        userWithSessions.sessions.some(session => session.sessionId === sessionId) ? 
-        userWithSessions : null;
+      console.log('Found user by session:', { id: userWithSessions._id, email: userWithSessions.email });
       
-      console.log('Session validation result:', userWithSession ? 'Valid session found' : 'No valid session found');
+      // Store the user ID and email for later use
+      userIdToUse = userWithSessions._id;
+      userEmail = userWithSessions.email;
       
-      if (userWithSession) {
-        sessionValid = true;
-        console.log('Session validated for user');
-      } else {
-        console.error('Invalid session for user');
-        
-        // Try a fallback approach - just use the user we found if they exist
-        if (userWithSessions && userWithSessions._id) {
-          console.log('Using fallback authentication - user exists but session not found');
-          sessionValid = true;
-          
-          // Log the session details for debugging
-          if (userWithSessions.sessions) {
-            console.log('Available sessions:', userWithSessions.sessions.length);
-            userWithSessions.sessions.forEach((session, index) => {
-              console.log(`Session ${index}:`, session.sessionId, 
-                'matches:', session.sessionId === sessionId);
-            });
+      // Update the session's lastActive timestamp
+      try {
+        const updatedSessions = userWithSessions.sessions.map(session => {
+          if (session.sessionId === sessionId) {
+            return {
+              ...session,
+              lastActive: new Date().toISOString()
+            };
           }
-        } else {
-          return NextResponse.json(
-            { error: 'Invalid session' },
-            { status: 401 }
-          );
-        }
+          return session;
+        });
+        
+        await client.patch(userWithSessions._id)
+          .set({ sessions: updatedSessions })
+          .commit();
+          
+        console.log('Updated session lastActive timestamp');
+      } catch (sessionUpdateError) {
+        console.error('Failed to update session timestamp:', sessionUpdateError);
+        // Continue anyway, not critical
       }
     } catch (sessionError) {
       console.error('Error verifying session:', sessionError);
@@ -93,27 +88,16 @@ export async function GET(request) {
         { status: 500 }
       );
     }
-    
-    // If we have email but no userId, try to find the user by email
-    let userIdToUse = userId;
-    if (!userIdToUse && email) {
-      const user = await client.fetch(
-        `*[_type == "user" && email == $email][0]._id`,
-        { email }
-      );
-      
-      if (user) {
-        userIdToUse = user;
-      }
-    }
 
-    // Construct query based on what we have (userId or email)
+    // Construct query to fetch orders for this user
     let orders = [];
     
-    if (userIdToUse) {
-      // Query by user reference if we have userId
+    try {
+      // Query by user reference (primary) and email (backup)
+      console.log('Fetching orders for user:', { id: userIdToUse, email: userEmail });
+      
       orders = await client.fetch(
-        `*[_type == "order" && user._ref == $userId] | order(_createdAt desc) {
+        `*[_type == "order" && (user._ref == $userId || userEmail == $email)] | order(_createdAt desc) {
           _id,
           _createdAt,
           status,
@@ -129,35 +113,41 @@ export async function GET(request) {
             price
           }
         }`,
-        { userId: userIdToUse }
+        { 
+          userId: userIdToUse,
+          email: userEmail
+        }
       );
-    } else if (email) {
-      // Query by email field if we don't have userId
-      orders = await client.fetch(
-        `*[_type == "order" && userEmail == $email] | order(_createdAt desc) {
-          _id,
-          _createdAt,
-          status,
-          totalAmount,
-          userEmail,
-          orderItems[] {
-            product->{
-              _id,
-              name,
-              price,
-              image
-            },
-            quantity,
-            price
-          }
-        }`,
-        { email }
+      
+      console.log(`Found ${orders.length} orders`);
+      
+      // Transform the orders to ensure they have consistent structure
+      const transformedOrders = orders.map(order => ({
+        _id: order._id,
+        orderNumber: order._id.substring(0, 8).toUpperCase(),
+        createdAt: order._createdAt,
+        status: order.status || 'processing',
+        total: order.totalAmount,
+        items: (order.orderItems || []).map(item => ({
+          _id: item._id || 'unknown',
+          product: {
+            name: item.product?.name || 'Product name unavailable',
+            price: item.product?.price || 0,
+          },
+          quantity: item.quantity || 1,
+        })),
+      }));
+      
+      return NextResponse.json(transformedOrders, { status: 200 });
+    } catch (fetchError) {
+      console.error('Error fetching orders from Sanity:', fetchError);
+      return NextResponse.json(
+        { error: 'Failed to fetch orders from database' },
+        { status: 500 }
       );
     }
-
-    return NextResponse.json(orders, { status: 200 });
   } catch (error) {
-    console.error('Error fetching orders:', error);
+    console.error('Error in orders API:', error);
     return NextResponse.json(
       { error: 'Failed to fetch orders' },
       { status: 500 }

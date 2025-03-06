@@ -1,7 +1,19 @@
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { FiRefreshCw } from 'react-icons/fi';
+import { useStateContext } from '../context/StateContext';
 
-const OrderHistoryFallback = () => {
+const OrderHistoryFallback = ({ error, onRetry }) => {
+  const router = useRouter();
+  const { setShowAuth } = useStateContext();
+  
+  // Handle sign in button click
+  const handleSignIn = () => {
+    setShowAuth(true);
+    // After sign in, the user should be redirected back to the order history page
+    localStorage.setItem('redirectAfterAuth', '/order-history');
+  };
   return (
     <div style={{ 
       padding: '40px 20px',
@@ -29,7 +41,7 @@ const OrderHistoryFallback = () => {
           marginBottom: '20px',
           color: '#555'
         }}>
-          We're currently having trouble loading your order history.
+          {error || "We're currently having trouble loading your order history."}
         </p>
         
         <p style={{ 
@@ -37,20 +49,64 @@ const OrderHistoryFallback = () => {
           marginBottom: '30px',
           color: '#555'
         }}>
-          Please try again later or contact our customer support if the issue persists.
+          {error && error.includes('log in') 
+            ? 'Please sign in to view your order history.' 
+            : 'Please try again or contact our customer support if the issue persists.'}
         </p>
         
-        <Link href="/" style={{
-          display: 'inline-block',
-          padding: '10px 20px',
-          backgroundColor: '#4a4a4a',
-          color: 'white',
-          textDecoration: 'none',
-          borderRadius: '4px',
-          fontSize: '16px'
-        }}>
-          Return to Home
-        </Link>
+        <div style={{ display: 'flex', gap: '15px', justifyContent: 'center' }}>
+          {onRetry && (
+            <button 
+              onClick={onRetry}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px',
+                padding: '10px 20px',
+                backgroundColor: '#4a4a4a',
+                color: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                fontSize: '16px',
+                cursor: 'pointer'
+              }}
+            >
+              <FiRefreshCw />
+              Try Again
+            </button>
+          )}
+          
+          {error && (error.includes('log in') || error.includes('authentication')) ? (
+            <button
+              onClick={handleSignIn}
+              style={{
+                display: 'inline-block',
+                padding: '10px 20px',
+                backgroundColor: '#007bff',
+                color: 'white',
+                border: 'none',
+                textDecoration: 'none',
+                borderRadius: '4px',
+                fontSize: '16px',
+                cursor: 'pointer'
+              }}
+            >
+              Sign In
+            </button>
+          ) : (
+            <Link href="/" style={{
+              display: 'inline-block',
+              padding: '10px 20px',
+              backgroundColor: '#4a4a4a',
+              color: 'white',
+              textDecoration: 'none',
+              borderRadius: '4px',
+              fontSize: '16px'
+            }}>
+              Return to Home
+            </Link>
+          )}
+        </div>
       </div>
     </div>
   );

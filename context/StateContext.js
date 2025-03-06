@@ -13,6 +13,64 @@ export const StateContext = ({ children }) => {
   const [user, setUser] = useState(null);
   const [sessionId, setSessionId] = useState(null);
 
+  // Function to parse cookies
+  const parseCookies = () => {
+    if (typeof document === 'undefined') return {};
+    
+    return document.cookie.split(';').reduce((acc, cookie) => {
+      const [key, value] = cookie.trim().split('=');
+      if (key && value) acc[key.trim()] = value;
+      return acc;
+    }, {});
+  };
+
+  // Check if the user is authenticated
+  const isAuthenticated = () => {
+    // Check for both user object and session cookie
+    const cookies = parseCookies();
+    const hasSessionCookie = !!cookies['user_session'];
+    return !!user && hasSessionCookie;
+  };
+
+  // Attempt to restore session from cookies
+  const restoreSession = async () => {
+    try {
+      const cookies = parseCookies();
+      const sessionId = cookies['user_session'];
+      const emailFromCookie = cookies['user_email'];
+      
+      if (sessionId && emailFromCookie) {
+        // If we have both session and email cookies but no user object
+        if (!user) {
+          // Try to validate session with the server
+          const response = await fetch('/api/auth/validate-session', {
+            method: 'GET',
+            credentials: 'include'
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            if (data.valid && data.user) {
+              setUser(data.user);
+              localStorage.setItem('user', JSON.stringify(data.user));
+              localStorage.setItem('userEmail', data.user.email);
+              return true;
+            }
+          }
+          
+          // If server validation fails, at least create a minimal user object
+          setUser({ email: emailFromCookie });
+          localStorage.setItem('userEmail', emailFromCookie);
+        }
+        return true;
+      }
+      return false;
+    } catch (error) {
+      console.error('Error restoring session:', error);
+      return false;
+    }
+  };
+
   useEffect(() => {
     if (typeof window !== 'undefined') {
       console.log('Initializing authentication state');
@@ -30,20 +88,14 @@ export const StateContext = ({ children }) => {
       }
       
       // Store email for easier access
-      if (storedEmail) {
-        if (!user) {
-          // If we have email but no user object, create a minimal one
-          setUser({ email: storedEmail });
-          console.log('Created minimal user object from email:', storedEmail);
-        }
+      if (storedEmail && !user) {
+        // If we have email but no user object, create a minimal one
+        setUser({ email: storedEmail });
+        console.log('Created minimal user object from email:', storedEmail);
       }
       
       // Get session ID from cookie
-      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        if (key && value) acc[key] = value;
-        return acc;
-      }, {});
+      const cookies = parseCookies();
       
       if (cookies['user_session']) {
         setSessionId(cookies['user_session']);
@@ -54,6 +106,17 @@ export const StateContext = ({ children }) => {
           setUser({ email: cookies['user_email'] });
           localStorage.setItem('userEmail', cookies['user_email']);
           console.log('Created user from cookie email:', cookies['user_email']);
+        }
+        
+        // Attempt to restore full session if needed
+        if (!user || !user._id) {
+          restoreSession().then(success => {
+            if (success) {
+              console.log('Session restored successfully');
+            } else {
+              console.log('Failed to restore session');
+            }
+          });
         }
       } else {
         console.log('No session ID found in cookies');
@@ -116,6 +179,44 @@ export const StateContext = ({ children }) => {
       } else {
         console.log('No session ID received from login response');
       }
+      
+      // Ensure the cart is updated if items were added before login
+      const storedCartItems = localStorage.getItem('cartItems');
+      if (storedCartItems) {
+        try {
+          const parsedCartItems = JSON.parse(storedCartItems);
+          if (parsedCartItems.length > 0 && cartItems.length === 0) {
+            setCartItems(parsedCartItems);
+            
+            // Calculate total price and quantities
+            const totalPrice = parsedCartItems.reduce((total, item) => {
+              return total + (item.price * item.quantity);
+            }, 0);
+            
+            const totalQuantities = parsedCartItems.reduce((total, item) => {
+              return total + item.quantity;
+            }, 0);
+            
+            setTotalPrice(totalPrice);
+            setTotalQuantities(totalQuantities);
+          }
+        } catch (error) {
+          console.error('Error parsing stored cart items during login:', error);
+        }
+      }
+      
+      // Check if we need to redirect to checkout after login
+      const shouldRedirectToCheckout = localStorage.getItem('redirectToCheckout') === 'true';
+      if (shouldRedirectToCheckout && typeof window !== 'undefined') {
+        // Clear the flag
+        localStorage.removeItem('redirectToCheckout');
+        
+        // Return an object with the redirect info
+        return {
+          user: data.user,
+          redirectToCheckout: true
+        };
+      }
 
       return data.user;
     } catch (error) {
@@ -154,6 +255,19 @@ export const StateContext = ({ children }) => {
         console.log('Session established after registration');
       } else {
         console.warn('No session ID received from registration response');
+      }
+      
+      // Check if we need to redirect to checkout after registration
+      const shouldRedirectToCheckout = localStorage.getItem('redirectToCheckout') === 'true';
+      if (shouldRedirectToCheckout && typeof window !== 'undefined') {
+        // Clear the flag
+        localStorage.removeItem('redirectToCheckout');
+        
+        // Return an object with the redirect info
+        return {
+          user: data.user,
+          redirectToCheckout: true
+        };
       }
 
       return data.user;

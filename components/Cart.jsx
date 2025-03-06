@@ -25,12 +25,20 @@ const Cart = () => {
       return;
     }
     
+    // Save cart to localStorage in any case
+    localStorage.setItem('cartItems', JSON.stringify(cartItems));
+    
     // Check if user is logged in
     if (!user || !isAuthenticated()) {
       console.log('Authentication check failed during checkout:', { user, authenticated: isAuthenticated() });
-      toast.error('Please sign in to place an order');
+      toast.error('Please sign in to continue with your order');
+      
+      // Close cart and show authentication dialog
       setShowCart(false);
       setShowAuth(true);
+      
+      // Store a flag in localStorage to indicate we should redirect to checkout after login
+      localStorage.setItem('redirectToCheckout', 'true');
       return;
     }
     
@@ -40,6 +48,7 @@ const Cart = () => {
       toast.error('User information incomplete. Please sign in again.');
       setShowCart(false);
       setShowAuth(true);
+      localStorage.setItem('redirectToCheckout', 'true');
       return;
     }
     
@@ -47,8 +56,8 @@ const Cart = () => {
       // Show loading toast
       const loadingToast = toast.loading('Processing your order...');
       
-      // Save cart to localStorage before attempting order
-      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+      // Clear the checkout redirect flag if it exists
+      localStorage.removeItem('redirectToCheckout');
       
       console.log('Placing order for user:', user.email);
       

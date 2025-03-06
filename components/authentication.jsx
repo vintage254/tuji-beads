@@ -16,7 +16,7 @@ const Authentication = ({ setShowAuth }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [generalError, setGeneralError] = useState('');
   
-  const { login, register } = useStateContext();
+  const { login, register, setShowCart } = useStateContext();
 
   const validateForm = () => {
     const newErrors = {};
@@ -63,18 +63,30 @@ const Authentication = ({ setShowAuth }) => {
     setIsLoading(true);
     
     try {
+      let result;
+      
       if (isLogin) {
         // Login
-        await login(formData.email, formData.password);
+        result = await login(formData.email, formData.password);
         toast.success('Logged in successfully!');
       } else {
         // Register
-        await register(formData);
+        result = await register(formData);
         toast.success('Account created successfully!');
       }
       
       // Close modal on success
       onClose();
+      
+      // Check if we need to redirect to checkout
+      if (result && result.redirectToCheckout) {
+        // Small delay to ensure state is updated
+        setTimeout(() => {
+          // Show cart to continue checkout process
+          setShowCart(true);
+          toast.success('You can now complete your order!');
+        }, 500);
+      }
     } catch (error) {
       setGeneralError(error.message || 'Authentication failed. Please try again.');
       toast.error(error.message || 'Authentication failed');
