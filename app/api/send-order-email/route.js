@@ -76,22 +76,16 @@ export async function POST(request) {
     
     // Create email transporter with more robust configuration
     const transporter = nodemailer.createTransport({
-      host: 'smtp.gmail.com',
-      port: 465,
-      secure: true, // use SSL
+      service: 'gmail',
       auth: {
-        user: process.env.EMAIL_USER,
+        user: process.env.EMAIL_USER || 'derricknjuguna414@gmail.com',
         pass: process.env.EMAIL_PASSWORD
-      },
-      tls: {
-        rejectUnauthorized: false
-      },
-      debug: true // Always enable debug for troubleshooting
+      }
     });
 
     // Create email content
     const emailContent = {
-      from: process.env.EMAIL_USER,
+      from: process.env.EMAIL_USER || 'derricknjuguna414@gmail.com',
       to: 'derricknjuguna414@gmail.com',
       subject: `New Order from ${user.name}`,
       html: `
@@ -113,26 +107,6 @@ export async function POST(request) {
       `
     };
 
-    // Verify connection configuration
-    try {
-      console.log('Verifying email transport connection...');
-      await new Promise((resolve, reject) => {
-        // verify connection configuration
-        transporter.verify(function (error, success) {
-          if (error) {
-            console.error('Email transport verification failed:', error);
-            reject(error);
-          } else {
-            console.log('Email transport is ready to send messages');
-            resolve(success);
-          }
-        });
-      });
-    } catch (verifyError) {
-      console.error('Email transport verification error:', verifyError);
-      // Continue anyway, as some providers don't support verify
-    }
-    
     // Send email to admin
     try {
       console.log('Sending notification email to admin...');
@@ -146,7 +120,7 @@ export async function POST(request) {
     
     // Also send a confirmation email to the customer
     const customerEmailContent = {
-      from: process.env.EMAIL_USER,
+      from: process.env.EMAIL_USER || 'derricknjuguna414@gmail.com',
       to: user.email,
       subject: 'Your Order Confirmation - Tuji Beads',
       html: `

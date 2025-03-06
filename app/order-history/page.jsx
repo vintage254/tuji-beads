@@ -218,6 +218,18 @@ function OrderHistoryClient() {
       margin: '0 auto',
       fontFamily: 'Arial, sans-serif'
     }}>
+      <div style={{
+        backgroundColor: '#d4edda',
+        color: '#155724',
+        padding: '15px',
+        borderRadius: '5px',
+        marginBottom: '20px',
+        textAlign: 'center'
+      }}>
+        <h3 style={{ margin: '0 0 10px 0' }}>Thank you for ordering with us!</h3>
+        <p style={{ margin: '0' }}>An agent will contact you shortly regarding your order.</p>
+      </div>
+      
       <div style={{ 
         display: 'flex',
         justifyContent: 'space-between',

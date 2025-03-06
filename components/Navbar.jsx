@@ -75,6 +75,7 @@ const Navbar = () => {
               onClick={toggleMobileMenu} 
               aria-label="Toggle menu" 
               className="hamburger-button"
+              style={{ zIndex: 1001 }}
             >
               <div className={`hamburger-icon ${mobileMenuOpen ? 'open' : ''}`}>
                 <span className="hamburger-line"></span>
@@ -147,7 +148,7 @@ const Navbar = () => {
         )}
         
         {/* Mobile Navigation Menu */}
-        <div className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`}>
+        <div className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`} style={{ zIndex: 1000 }}>
           <div className="mobile-nav-content">
             <div className="mobile-nav-header">
               <div className="mobile-logo">
