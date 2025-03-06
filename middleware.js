@@ -22,6 +22,12 @@ export function middleware(request) {
     '/checkout'
   ];
 
+  // Define studio routes that require admin authentication
+  const studioRoutes = [
+    '/studio',
+    '/studio-direct'
+  ];
+
   // Special handling for order-history to prevent static generation issues
   if (request.nextUrl.pathname.startsWith('/order-history')) {
     // Set a header to indicate this is a dynamic route
@@ -36,9 +42,33 @@ export function middleware(request) {
     request.nextUrl.pathname.startsWith(route)
   );
 
-  // If it's not a protected route, allow the request to proceed
-  if (!isProtectedRoute) {
+  // Check if the current path is a studio route requiring admin access
+  const isStudioRoute = studioRoutes.some(route => 
+    request.nextUrl.pathname.startsWith(route)
+  );
+
+  // If it's not a protected or studio route, allow the request to proceed
+  if (!isProtectedRoute && !isStudioRoute) {
     return NextResponse.next();
+  }
+
+  // For studio routes, check for admin authentication
+  if (isStudioRoute) {
+    const cookieHeader = request.headers.get('cookie');
+    
+    // If we have cookies, check for admin session ID
+    if (cookieHeader) {
+      const parsedCookies = parseCookies(cookieHeader);
+      const adminSessionId = parsedCookies['admin_session'];
+      
+      if (adminSessionId) {
+        // Allow the request to proceed since admin is authenticated
+        return NextResponse.next();
+      }
+    }
+    
+    // No valid admin authentication found, redirect to admin login
+    return NextResponse.redirect(new URL('/admin-login', request.url));
   }
 
   // For API routes, check for session cookies
@@ -77,6 +107,8 @@ export const config = {
     '/api/orders/:path*',
     '/order-history',
     '/profile',
-    '/checkout'
+    '/checkout',
+    '/studio/:path*',
+    '/studio-direct/:path*'
   ],
 };
