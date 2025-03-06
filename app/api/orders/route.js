@@ -1,21 +1,62 @@
 import { client } from '../../../lib/client';
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 // Set this route to be dynamically rendered
 export const dynamic = 'force-dynamic';
 
 export async function GET(request) {
   try {
+    // Get session ID from cookies
+    const cookieStore = cookies();
+    const sessionId = cookieStore.get('user_session')?.value;
+    const userEmailFromCookie = cookieStore.get('user_email')?.value;
+    
+    // Check for authentication via session cookie
+    if (!sessionId) {
+      console.error('No session ID found in cookies');
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
+    
     // Get the user identifier from the query parameter (can be ID or email)
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
-    const email = searchParams.get('email');
+    const email = searchParams.get('email') || userEmailFromCookie;
     
     // We need either userId or email
     if (!userId && !email) {
       return NextResponse.json(
         { error: 'User ID or email is required' },
         { status: 400 }
+      );
+    }
+    
+    // Verify the session is valid for this user
+    let sessionValid = false;
+    try {
+      const userWithSession = await client.fetch(
+        `*[_type == "user" && ((_id == $userId) || (email == $email)) && sessions[].sessionId == $sessionId][0]`,
+        { userId, email, sessionId }
+      );
+      
+      if (userWithSession) {
+        sessionValid = true;
+        console.log('Session validated for user');
+      } else {
+        console.error('Invalid session for user');
+        return NextResponse.json(
+          { error: 'Invalid session' },
+          { status: 401 }
+        );
+      }
+    } catch (sessionError) {
+      console.error('Error verifying session:', sessionError);
+      return NextResponse.json(
+        { error: 'Authentication error' },
+        { status: 500 }
       );
     }
     

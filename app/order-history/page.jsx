@@ -29,17 +29,42 @@ export default function OrderHistoryPage() {
     try {
       // Get user from localStorage
       const storedUser = localStorage.getItem('user');
-      if (!storedUser) {
+      const storedEmail = localStorage.getItem('userEmail');
+      
+      // Check for session cookie
+      const hasCookie = document.cookie.includes('user_session=');
+      
+      if (!hasCookie) {
         setError('Please log in to view your order history');
         setIsLoading(false);
         return;
       }
-
-      const parsedUser = JSON.parse(storedUser);
-      setUser(parsedUser);
+      
+      let userData = null;
+      
+      if (storedUser) {
+        try {
+          userData = JSON.parse(storedUser);
+        } catch (parseError) {
+          console.error('Error parsing stored user:', parseError);
+        }
+      }
+      
+      // If we don't have a full user object but have an email, create a minimal user object
+      if (!userData && storedEmail) {
+        userData = { email: storedEmail };
+      }
+      
+      if (!userData) {
+        setError('Please log in to view your order history');
+        setIsLoading(false);
+        return;
+      }
+      
+      setUser(userData);
 
       // Fetch orders
-      fetchOrders(parsedUser);
+      fetchOrders(userData);
     } catch (err) {
       console.error('Error initializing order history:', err);
       setError('An error occurred while loading your order history');
@@ -49,18 +74,27 @@ export default function OrderHistoryPage() {
 
   const fetchOrders = async (user) => {
     try {
-      if (!user || !user.token) {
+      if (!user) {
         throw new Error('Authentication required');
       }
 
-      // Add user ID to query params
-      const userId = user._id;
-      const response = await fetch(`/api/orders?userId=${userId}`, {
+      // Add user ID or email to query params
+      const params = new URLSearchParams();
+      if (user._id) {
+        params.append('userId', user._id);
+      } else if (user.email) {
+        params.append('email', user.email);
+      } else {
+        throw new Error('User ID or email is required');
+      }
+      
+      // Use credentials: 'include' to send cookies with the request
+      const response = await fetch(`/api/orders?${params.toString()}`, {
         method: 'GET',
         headers: {
-          'Authorization': `Bearer ${user.token}`,
           'Content-Type': 'application/json',
         },
+        credentials: 'include', // Important for sending session cookies
       });
 
       if (!response.ok) {
