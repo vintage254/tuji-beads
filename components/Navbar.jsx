@@ -51,6 +51,10 @@ const Navbar = () => {
   
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
+    // Prevent body scrolling when menu is open
+    if (typeof document !== 'undefined') {
+      document.body.style.overflow = !mobileMenuOpen ? 'hidden' : '';
+    }
   };
   
   return (
@@ -65,8 +69,16 @@ const Navbar = () => {
         {/* Mobile menu toggle button - only show on mobile */}
         {isMobile && (
           <div className="mobile-menu-toggle">
-            <button onClick={toggleMobileMenu} aria-label="Toggle menu">
-              {mobileMenuOpen ? <AiOutlineClose size={24} /> : <AiOutlineMenu size={24} />}
+            <button 
+              onClick={toggleMobileMenu} 
+              aria-label="Toggle menu" 
+              className="hamburger-button"
+            >
+              <div className={`hamburger-icon ${mobileMenuOpen ? 'open' : ''}`}>
+                <span></span>
+                <span></span>
+                <span></span>
+              </div>
             </button>
           </div>
         )}
@@ -125,53 +137,55 @@ const Navbar = () => {
         
         {/* Mobile Navigation Menu */}
         <div className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`}>
-          <div className="mobile-nav-header">
-            <div className="mobile-logo">
-              <Image src="/logo.png" alt="Beads Charm Logo" width={100} height={50} quality={100} />
-            </div>
-            <button onClick={toggleMobileMenu} aria-label="Close menu" className="mobile-close-btn">
-              <AiOutlineClose size={24} />
-            </button>
-          </div>
-          <div className="mobile-nav-links">
-            <Link href="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-            <Link href="/products" onClick={() => setMobileMenuOpen(false)}>Products</Link>
-            <Link href="/about" onClick={() => setMobileMenuOpen(false)}>About Us</Link>
-            {user && (
-              <Link href="/order-history" onClick={() => setMobileMenuOpen(false)}>Order History</Link>
-            )}
-            
-            <div className="mobile-nav-buttons">
-              {user ? (
-                <>
-                  <div className="user-menu-mobile">
-                    <span className="user-name-mobile">
-                      <AiOutlineUser />
-                      <span>{user.name || user.email}</span>
-                    </span>
-                  </div>
-                  <button type="button" className="logout-button-mobile" onClick={() => {
-                    logout();
-                    router.push('/');
-                    setMobileMenuOpen(false);
-                  }}>
-                    <AiOutlineLogout />
-                    <span>Logout</span>
-                  </button>
-                </>
-              ) : (
-                <button type="button" className="auth-button-mobile" onClick={handleSignIn}>
-                  <AiOutlineUser />
-                  <span>Sign In</span>
-                </button>
-              )}
-              <button type="button" className="cart-icon-mobile" onClick={() => {
-                setShowCart(true);
-                setMobileMenuOpen(false);
-              }}>
-                <AiOutlineShopping />
-                <span>Cart ({totalQuantities || 0})</span>
+          <div className="mobile-nav-content">
+            <div className="mobile-nav-header">
+              <div className="mobile-logo">
+                <Image src="/logo.png" alt="Beads Charm Logo" width={100} height={50} quality={100} />
+              </div>
+              <button onClick={toggleMobileMenu} aria-label="Close menu" className="mobile-close-btn">
+                <AiOutlineClose size={24} />
               </button>
+            </div>
+            <div className="mobile-nav-links">
+              <Link href="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
+              <Link href="/products" onClick={() => setMobileMenuOpen(false)}>Products</Link>
+              <Link href="/about" onClick={() => setMobileMenuOpen(false)}>About Us</Link>
+              {user && (
+                <Link href="/order-history" onClick={() => setMobileMenuOpen(false)}>Order History</Link>
+              )}
+              
+              <div className="mobile-nav-buttons">
+                {user ? (
+                  <>
+                    <div className="user-menu-mobile">
+                      <span className="user-name-mobile">
+                        <AiOutlineUser />
+                        <span>{user.name || user.email}</span>
+                      </span>
+                    </div>
+                    <button type="button" className="logout-button-mobile" onClick={() => {
+                      logout();
+                      router.push('/');
+                      setMobileMenuOpen(false);
+                    }}>
+                      <AiOutlineLogout />
+                      <span>Logout</span>
+                    </button>
+                  </>
+                ) : (
+                  <button type="button" className="auth-button-mobile" onClick={handleSignIn}>
+                    <AiOutlineUser />
+                    <span>Sign In</span>
+                  </button>
+                )}
+                <button type="button" className="cart-icon-mobile" onClick={() => {
+                  setShowCart(true);
+                  setMobileMenuOpen(false);
+                }}>
+                  <AiOutlineShopping />
+                  <span>Cart ({totalQuantities || 0})</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -179,8 +193,156 @@ const Navbar = () => {
 
       {showCart && <Cart />}
       {showAuth && <Authentication setShowAuth={setShowAuth} />}
+
+      <style jsx>{`
+        /* Hamburger Menu Styles */
+        .hamburger-button {
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          padding: 0;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          width: 40px;
+          height: 40px;
+        }
+        
+        .hamburger-icon {
+          width: 24px;
+          height: 18px;
+          position: relative;
+          transform: rotate(0deg);
+          transition: .5s ease-in-out;
+        }
+        
+        .hamburger-icon span {
+          display: block;
+          position: absolute;
+          height: 2px;
+          width: 100%;
+          background: #333;
+          border-radius: 2px;
+          opacity: 1;
+          left: 0;
+          transform: rotate(0deg);
+          transition: .25s ease-in-out;
+        }
+        
+        .hamburger-icon span:nth-child(1) {
+          top: 0px;
+        }
+        
+        .hamburger-icon span:nth-child(2) {
+          top: 8px;
+        }
+        
+        .hamburger-icon span:nth-child(3) {
+          top: 16px;
+        }
+        
+        .hamburger-icon.open span:nth-child(1) {
+          top: 8px;
+          transform: rotate(135deg);
+        }
+        
+        .hamburger-icon.open span:nth-child(2) {
+          opacity: 0;
+          left: -60px;
+        }
+        
+        .hamburger-icon.open span:nth-child(3) {
+          top: 8px;
+          transform: rotate(-135deg);
+        }
+        
+        /* Mobile Navigation Styles */
+        .mobile-nav {
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100vh;
+          background-color: rgba(255, 255, 255, 0.98);
+          z-index: 1000;
+          transform: translateX(-100%);
+          transition: transform 0.3s ease-in-out;
+          overflow-y: auto;
+        }
+        
+        .mobile-nav.open {
+          transform: translateX(0);
+        }
+        
+        .mobile-nav-content {
+          padding: 20px;
+          height: 100%;
+          display: flex;
+          flex-direction: column;
+        }
+        
+        .mobile-nav-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 30px;
+        }
+        
+        .mobile-close-btn {
+          background: transparent;
+          border: none;
+          cursor: pointer;
+          color: #333;
+        }
+        
+        .mobile-nav-links {
+          display: flex;
+          flex-direction: column;
+          gap: 20px;
+        }
+        
+        .mobile-nav-links a {
+          font-size: 18px;
+          color: #333;
+          text-decoration: none;
+          padding: 10px 0;
+          border-bottom: 1px solid #eee;
+          transition: color 0.2s;
+        }
+        
+        .mobile-nav-links a:hover {
+          color: #666;
+        }
+        
+        .mobile-nav-buttons {
+          margin-top: 30px;
+          display: flex;
+          flex-direction: column;
+          gap: 15px;
+        }
+        
+        .mobile-nav-buttons button {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          background: none;
+          border: none;
+          font-size: 16px;
+          color: #333;
+          cursor: pointer;
+          padding: 10px 0;
+        }
+        
+        .user-name-mobile {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          font-size: 16px;
+          color: #333;
+        }
+      `}</style>
     </>
   )
 }
 
-export default Navbar
+export default Navbar;

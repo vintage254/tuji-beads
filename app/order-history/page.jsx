@@ -6,6 +6,7 @@ import dynamicImport from 'next/dynamic';
 import { useStateContext } from '../../context/StateContext';
 import { FiRefreshCw } from 'react-icons/fi';
 import ClientLayout from '../../components/ClientLayout';
+import Navbar from '../../components/Navbar';
 
 // Import the fallback component
 const OrderHistoryFallback = dynamicImport(() => import('../../components/OrderHistoryFallback'), {
@@ -282,16 +283,18 @@ function OrderHistoryClient() {
               </p>
             </div>
             <div>
-              <span style={{
-                display: 'inline-block',
-                padding: '5px 10px',
-                backgroundColor: order.status === 'completed' ? '#d4edda' : '#fff3cd',
-                color: order.status === 'completed' ? '#155724' : '#856404',
-                borderRadius: '3px',
-                fontSize: '14px'
-              }}>
-                {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
-              </span>
+              {order.status !== 'pending' && (
+                <span style={{
+                  display: 'inline-block',
+                  padding: '5px 10px',
+                  backgroundColor: order.status === 'completed' ? '#d4edda' : '#fff3cd',
+                  color: order.status === 'completed' ? '#155724' : '#856404',
+                  borderRadius: '3px',
+                  fontSize: '14px'
+                }}>
+                  {order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                </span>
+              )}
             </div>
           </div>
           
@@ -347,6 +350,7 @@ function OrderHistoryClient() {
 export default function OrderHistoryPage() {
   return (
     <ClientLayout>
+      <Navbar />
       <OrderHistoryClient />
     </ClientLayout>
   );

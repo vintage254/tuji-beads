@@ -1,10 +1,14 @@
-import Layout from "@/components/Layout";
+'use client';
 
 export const metadata = {
-  title: 'Studio',
-  description: 'Tuji Beads Studio',
+  title: 'Tuji Beads Studio',
+  description: 'Content management for Tuji Beads',
 };
 
 export default function StudioLayout({ children }) {
-  return <Layout>{children}</Layout>;
+  return (
+    <div style={{ height: '100vh' }}>
+      {children}
+    </div>
+  );
 }
