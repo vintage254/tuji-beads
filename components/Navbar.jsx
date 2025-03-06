@@ -50,10 +50,12 @@ const Navbar = () => {
   };
   
   const toggleMobileMenu = () => {
+    console.log('Toggling mobile menu, current state:', mobileMenuOpen);
     setMobileMenuOpen(!mobileMenuOpen);
     // Prevent body scrolling when menu is open
     if (typeof document !== 'undefined') {
       document.body.style.overflow = !mobileMenuOpen ? 'hidden' : '';
+      console.log('Mobile menu toggled, new state:', !mobileMenuOpen);
     }
   };
   
@@ -127,8 +129,8 @@ const Navbar = () => {
           </div>
         )}
         
-        {/* Mobile Cart Icon and Menu Toggle - only show on mobile when menu is closed */}
-        {isMobile && !mobileMenuOpen && (
+        {/* Mobile Cart Icon and Menu Toggle - always show on mobile */}
+        {isMobile && (
           <div className="mobile-nav-controls">
             <button type="button" className="cart-icon" onClick={() => setShowCart(true)}>
               <AiOutlineShopping />

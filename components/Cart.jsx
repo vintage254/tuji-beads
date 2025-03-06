@@ -114,18 +114,20 @@ const Cart = () => {
         // Show success message with order ID
         toast.success(`Order #${result.order._id} placed successfully!`);
         
-        // Set order ID and show thank you popup
-        setOrderId(result.order._id);
-        setShowThankYouPopup(true);
-        
-        // Close cart
+        // Close cart first
         setShowCart(false);
         
-        // Wait a longer time before redirecting to ensure user sees the thank you message
+        // Set order ID and show thank you popup after cart is closed
         setTimeout(() => {
-          setShowThankYouPopup(false);
-          router.push('/order-history');
-        }, 5000);
+          setOrderId(result.order._id);
+          setShowThankYouPopup(true);
+          
+          // Wait before redirecting to ensure user sees the thank you message
+          setTimeout(() => {
+            setShowThankYouPopup(false);
+            router.push('/order-history');
+          }, 5000);
+        }, 300);
       } else {
         throw new Error(result.error || 'Failed to create order');
       }
@@ -166,28 +168,35 @@ const Cart = () => {
     }
   };
 
+  // Create a separate thank you popup component to avoid nesting issues
+  const ThankYouPopup = () => {
+    if (!showThankYouPopup) return null;
+    
+    return (
+      <div className="thank-you-popup-overlay">
+        <div className="thank-you-popup">
+          <AiOutlineCheckCircle size={60} color="#4CAF50" />
+          <h2>Thank You for Your Order!</h2>
+          <p>Order #{orderId} has been placed successfully.</p>
+          <p>Your order has been received.</p>
+          <button 
+            type="button" 
+            className="btn" 
+            onClick={() => {
+              setShowThankYouPopup(false);
+              router.push('/order-history');
+            }}
+          >
+            View My Orders
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <>
-      {showThankYouPopup && (
-        <div className="thank-you-popup-overlay">
-          <div className="thank-you-popup">
-            <AiOutlineCheckCircle size={60} color="#4CAF50" />
-            <h2>Thank You for Your Order!</h2>
-            <p>Order #{orderId} has been placed successfully.</p>
-            <p>An agent will contact you shortly to confirm your order details.</p>
-            <button 
-              type="button" 
-              className="btn" 
-              onClick={() => {
-                setShowThankYouPopup(false);
-                router.push('/order-history');
-              }}
-            >
-              View My Orders
-            </button>
-          </div>
-        </div>
-      )}
+      <ThankYouPopup />
       <div className="cart-wrapper" ref={cartRef}>
         <div className="cart-container">
         <button type='button' className='cart-heading' onClick={() => setShowCart(false)}>
