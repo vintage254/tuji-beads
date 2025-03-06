@@ -11,7 +11,7 @@ const InstagramFeed = () => {
   const [error, setError] = useState(null);
   
   // Instagram account username
-  const instagramUsername = 'tujibeads'; // Replace with your actual Instagram username
+  const instagramUsername = 'beads_charm_collections'; // Updated to the correct Instagram username
   
   // Fallback images in case the API fails
   const fallbackPosts = useMemo(() => [

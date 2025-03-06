@@ -75,9 +75,9 @@ const Navbar = () => {
               className="hamburger-button"
             >
               <div className={`hamburger-icon ${mobileMenuOpen ? 'open' : ''}`}>
-                <span></span>
-                <span></span>
-                <span></span>
+                <span className="hamburger-line"></span>
+                <span className="hamburger-line"></span>
+                <span className="hamburger-line"></span>
               </div>
             </button>
           </div>
@@ -194,7 +194,7 @@ const Navbar = () => {
       {showCart && <Cart />}
       {showAuth && <Authentication setShowAuth={setShowAuth} />}
 
-      <style jsx>{`
+      <style jsx global>{`
         /* Hamburger Menu Styles */
         .hamburger-button {
           background: transparent;
@@ -206,6 +206,7 @@ const Navbar = () => {
           justify-content: center;
           width: 40px;
           height: 40px;
+          z-index: 1000;
         }
         
         .hamburger-icon {
@@ -216,42 +217,42 @@ const Navbar = () => {
           transition: .5s ease-in-out;
         }
         
-        .hamburger-icon span {
+        .hamburger-line {
           display: block;
           position: absolute;
-          height: 2px;
+          height: 3px;
           width: 100%;
           background: #333;
-          border-radius: 2px;
+          border-radius: 3px;
           opacity: 1;
           left: 0;
           transform: rotate(0deg);
           transition: .25s ease-in-out;
         }
         
-        .hamburger-icon span:nth-child(1) {
+        .hamburger-icon .hamburger-line:nth-child(1) {
           top: 0px;
         }
         
-        .hamburger-icon span:nth-child(2) {
+        .hamburger-icon .hamburger-line:nth-child(2) {
           top: 8px;
         }
         
-        .hamburger-icon span:nth-child(3) {
+        .hamburger-icon .hamburger-line:nth-child(3) {
           top: 16px;
         }
         
-        .hamburger-icon.open span:nth-child(1) {
+        .hamburger-icon.open .hamburger-line:nth-child(1) {
           top: 8px;
           transform: rotate(135deg);
         }
         
-        .hamburger-icon.open span:nth-child(2) {
+        .hamburger-icon.open .hamburger-line:nth-child(2) {
           opacity: 0;
           left: -60px;
         }
         
-        .hamburger-icon.open span:nth-child(3) {
+        .hamburger-icon.open .hamburger-line:nth-child(3) {
           top: 8px;
           transform: rotate(-135deg);
         }
@@ -264,7 +265,7 @@ const Navbar = () => {
           width: 100%;
           height: 100vh;
           background-color: rgba(255, 255, 255, 0.98);
-          z-index: 1000;
+          z-index: 999;
           transform: translateX(-100%);
           transition: transform 0.3s ease-in-out;
           overflow-y: auto;

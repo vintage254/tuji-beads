@@ -27,14 +27,115 @@ const FooterBanner = ({ footerBanner }) => {
           </Link>
         </div>
 
-        <Image 
-          src={urlFor(image)} 
-          alt={desc}
-          width={500}
-          height={500}
-          className="footer-banner-image"
-        />
+        <div className="footer-banner-image-container">
+          <Image 
+            src={urlFor(image)} 
+            alt={desc}
+            width={500}
+            height={500}
+            className="footer-banner-image"
+          />
+        </div>
       </div>
+      
+      <style jsx>{`
+        .footer-banner-container {
+          padding: 100px 40px;
+          background-color: #f02d34;
+          border-radius: 15px;
+          position: relative;
+          height: 400px;
+          line-height: 1; 
+          color: white;
+          width: 100%;
+          margin-top: 120px;
+        }
+        
+        .banner-desc {
+          display: flex;
+          justify-content: space-between;
+        }
+        
+        .banner-desc .left h3 {
+          font-weight: 900;
+          font-size: 80px;
+          margin-left: 25px;
+        }
+        
+        .banner-desc .right {
+          line-height: 1.4;
+        }
+        
+        .banner-desc .right h3 {
+          font-weight: 800;
+          font-size: 60px;
+        }
+        
+        .banner-desc .right p {
+          font-size: 18px;
+        }
+        
+        .banner-desc .right button {
+          border-radius: 15px;
+          padding: 10px 16px;
+          background-color: white;
+          color: red;
+          border: none;
+          margin-top: 40px;
+          font-size: 18px;
+          font-weight: 500;
+          cursor: pointer;
+        }
+        
+        .footer-banner-image-container {
+          position: absolute;
+          top: -25%;
+          left: 25%;
+        }
+        
+        .footer-banner-image {
+          width: 450px;
+          height: 450px;
+        }
+        
+        @media screen and (max-width: 768px) {
+          .footer-banner-container {
+            height: auto;
+            padding: 40px 20px;
+            margin-top: 80px;
+          }
+          
+          .banner-desc {
+            flex-direction: column;
+            text-align: center;
+          }
+          
+          .banner-desc .left h3,
+          .banner-desc .right h3 {
+            font-size: 40px;
+            margin-left: 0;
+          }
+          
+          .banner-desc .right {
+            margin-top: 30px;
+          }
+          
+          .footer-banner-image-container {
+            position: relative;
+            top: 0;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            margin-top: 30px;
+          }
+          
+          .footer-banner-image {
+            width: 250px;
+            height: 250px;
+          }
+        }
+      `}</style>
     </div>
   )
 }
