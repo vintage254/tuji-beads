@@ -44,6 +44,33 @@ export const StateContext = ({ children }) => {
       
       if (cookies['user_session']) {
         setSessionId(cookies['user_session']);
+        console.log('Session ID retrieved from cookie:', cookies['user_session']);
+      } else {
+        console.log('No session ID found in cookies');
+      }
+      
+      // Initialize cart from localStorage if available
+      const storedCartItems = localStorage.getItem('cartItems');
+      if (storedCartItems) {
+        try {
+          const parsedCartItems = JSON.parse(storedCartItems);
+          setCartItems(parsedCartItems);
+          
+          // Calculate total price and quantities
+          const totalPrice = parsedCartItems.reduce((total, item) => {
+            return total + (item.price * item.quantity);
+          }, 0);
+          
+          const totalQuantities = parsedCartItems.reduce((total, item) => {
+            return total + item.quantity;
+          }, 0);
+          
+          setTotalPrice(totalPrice);
+          setTotalQuantities(totalQuantities);
+        } catch (error) {
+          console.error('Error parsing stored cart items:', error);
+          localStorage.removeItem('cartItems');
+        }
       }
     }
   }, []);
@@ -77,7 +104,7 @@ export const StateContext = ({ children }) => {
         setSessionId(data.sessionId);
         console.log('Session established');
       } else {
-        console.warn('No session ID received from login response');
+        console.log('No session ID received from login response');
       }
 
       return data.user;
@@ -126,7 +153,24 @@ export const StateContext = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
+    // Attempt to invalidate session on the server
+    try {
+      if (sessionId) {
+        await fetch('/api/auth/logout', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error during logout:', error);
+      // Continue with client-side logout regardless of server response
+    }
+    
+    // Clear client-side state
     setUser(null);
     setSessionId(null);
     localStorage.removeItem('user');
@@ -136,15 +180,24 @@ export const StateContext = ({ children }) => {
     document.cookie = 'user_session=; Max-Age=0; path=/; domain=' + window.location.hostname;
     document.cookie = 'user_email=; Max-Age=0; path=/; domain=' + window.location.hostname;
     
+    // Clear cart
     setCartItems([]);
     setTotalPrice(0);
     setTotalQuantities(0);
     localStorage.removeItem('cartItems');
+    
     toast.success('Logged out successfully');
   };
 
   const isAuthenticated = () => {
-    return !!user && (!!sessionId || document.cookie.includes('user_session='));
+    // Check for user and valid session
+    const hasUser = !!user;
+    const hasSessionCookie = typeof window !== 'undefined' && document.cookie.includes('user_session=');
+    const hasSessionState = !!sessionId;
+    
+    const isAuth = hasUser && (hasSessionState || hasSessionCookie);
+    console.log('Authentication check:', { hasUser, hasSessionCookie, hasSessionState, isAuth });
+    return isAuth;
   };
 
   const authenticatedFetch = async (url, options = {}) => {
@@ -163,8 +216,18 @@ export const StateContext = ({ children }) => {
     if (userEmail) {
       headers['X-User-Email'] = userEmail;
     }
+    
+    // Check if we have a session ID
+    const currentSessionId = sessionId || (typeof window !== 'undefined' && 
+      document.cookie.split(';').find(c => c.trim().startsWith('user_session='))?.split('=')[1]);
+    
+    if (currentSessionId) {
+      console.log('Session ID available for request');
+    } else {
+      console.warn('No session ID available for authenticated request');
+    }
 
-    console.log('Making request to:', url);
+    console.log('Making authenticated request to:', url);
 
     try {
       // Include credentials to send cookies (session ID)
@@ -191,7 +254,7 @@ export const StateContext = ({ children }) => {
       
       return response;
     } catch (error) {
-      console.error('Error in fetch:', error);
+      console.error('Error in authenticatedFetch:', error);
       throw error;
     }
   };

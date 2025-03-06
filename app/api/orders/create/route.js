@@ -1,5 +1,6 @@
 import { client } from '../../../../lib/client';
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 
 // Set this route to be dynamically rendered
 export const dynamic = 'force-dynamic';
@@ -7,6 +8,20 @@ export const dynamic = 'force-dynamic';
 export async function POST(request) {
   try {
     console.log('=== ORDER CREATE API CALLED ===');
+    
+    // Get session ID from cookies
+    const cookieStore = cookies();
+    const sessionId = cookieStore.get('user_session')?.value;
+    const userEmail = cookieStore.get('user_email')?.value;
+    
+    // Check for authentication via session cookie
+    if (!sessionId) {
+      console.error('No session ID found in cookies');
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      );
+    }
     
     // Simple user identification - either from request body or cookie
     let requestData;
@@ -48,17 +63,49 @@ export async function POST(request) {
     let userIdToUse = userId;
     
     // If we only have email, find the user by email
-    if (!userIdToUse && email) {
-      const existingUser = await client.fetch(
-        `*[_type == "user" && email == $email][0]._id`,
-        { email }
-      );
+    if (!userIdToUse && (email || userEmail)) {
+      const emailToUse = email || userEmail;
       
-      if (existingUser) {
-        userIdToUse = existingUser;
-      } else {
-        // User doesn't exist, but we'll create the order anyway and link by email
-        console.log('User not found in database, creating order with email reference');
+      // Verify session if we have a user email
+      if (emailToUse) {
+        try {
+          // Check if the session is valid for this user
+          const userWithSession = await client.fetch(
+            `*[_type == "user" && email == $email && sessions[].sessionId == $sessionId][0]`,
+            { email: emailToUse, sessionId }
+          );
+          
+          if (!userWithSession) {
+            console.error('Invalid session for user');
+            return NextResponse.json(
+              { error: 'Invalid session' },
+              { status: 401 }
+            );
+          }
+          
+          // Use the verified user's ID
+          if (userWithSession._id) {
+            userIdToUse = userWithSession._id;
+            console.log('User authenticated via session:', userIdToUse);
+          }
+        } catch (sessionError) {
+          console.error('Error verifying session:', sessionError);
+        }
+      }
+      
+      // If we still don't have a user ID, try to find by email
+      if (!userIdToUse) {
+        const existingUser = await client.fetch(
+          `*[_type == "user" && email == $email][0]._id`,
+          { email: emailToUse }
+        );
+        
+        if (existingUser) {
+          userIdToUse = existingUser;
+        } else {
+          // User doesn't exist, but we'll create the order anyway and link by email
+          console.log('User not found in database, creating order with email reference');
+        }
       }
     }
 

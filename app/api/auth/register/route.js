@@ -34,7 +34,11 @@ export async function POST(request) {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user document
+    // Generate session ID for new user
+    const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const now = new Date().toISOString();
+    
+    // Create user document with session
     const user = await client.create({
       _type: 'user',
       name,
@@ -42,34 +46,24 @@ export async function POST(request) {
       phoneNumber,
       password: hashedPassword,
       role: 'customer',
-      createdAt: new Date().toISOString()
+      createdAt: now,
+      lastLogin: now,
+      sessions: [{
+        sessionId: sessionId,
+        createdAt: now,
+        lastActive: now
+      }]
     });
 
     // Return user data without password
     const { password: _, ...userWithoutPassword } = user;
 
-    // Create a simple session identifier
-    const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
-    
-    // Update user in Sanity with session info
-    try {
-      await client.patch(user._id)
-        .set({
-          lastLogin: new Date().toISOString(),
-          sessionId: sessionId
-        })
-        .commit();
-      
-      console.log('Updated user session in Sanity');
-    } catch (updateError) {
-      console.error('Failed to update user session in Sanity:', updateError);
-      // Continue anyway, not critical
-    }
+    // Session is already created during user creation, no need to update again
 
     // Set cookie with simple session info
     const response = NextResponse.json({
       user: userWithoutPassword,
-      sessionId: sessionId
+      sessionId: sessionId // Using the sessionId created earlier
     });
 
     // Set cookies for session management

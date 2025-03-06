@@ -34,6 +34,9 @@ const Cart = () => {
     }
     
     try {
+      // Save cart to localStorage before attempting order
+      localStorage.setItem('cartItems', JSON.stringify(cartItems));
+      
       // Create order through API route using authenticatedFetch
       const response = await authenticatedFetch('/api/orders/create', {
         method: 'POST',
@@ -44,7 +47,9 @@ const Cart = () => {
             price: item.price
           })),
           totalAmount: totalPrice,
-          userId: user._id
+          // Include both user ID and email for more robust identification
+          userId: user._id,
+          email: user.email
         })
       });
 
@@ -61,6 +66,7 @@ const Cart = () => {
         setCartItems([]);
         setTotalPrice(0);
         setTotalQuantities(0);
+        localStorage.removeItem('cartItems');
         
         // Show success message
         toast.success('Order placed successfully! We will contact you shortly.');

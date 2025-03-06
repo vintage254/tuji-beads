@@ -52,15 +52,44 @@ export async function POST(request) {
 
     // Create a simple session identifier
     const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const now = new Date().toISOString();
     
     // Update user in Sanity with session info
     try {
-      await client.patch(user._id)
-        .set({
-          lastLogin: new Date().toISOString(),
-          sessionId: sessionId
-        })
-        .commit();
+      // First check if the user already has sessions array
+      const existingUser = await client.fetch(
+        `*[_type == "user" && _id == $userId][0]{
+          sessions
+        }`,
+        { userId: user._id }
+      );
+      
+      if (existingUser && existingUser.sessions) {
+        // User has existing sessions, add new one to array
+        await client.patch(user._id)
+          .set({
+            lastLogin: now,
+          })
+          .setIfMissing({ sessions: [] })
+          .append('sessions', [{ 
+            sessionId: sessionId,
+            createdAt: now,
+            lastActive: now
+          }])
+          .commit();
+      } else {
+        // User doesn't have sessions array yet, create it
+        await client.patch(user._id)
+          .set({
+            lastLogin: now,
+            sessions: [{ 
+              sessionId: sessionId,
+              createdAt: now,
+              lastActive: now
+            }]
+          })
+          .commit();
+      }
       
       console.log('Updated user session in Sanity');
     } catch (updateError) {
