@@ -12,15 +12,12 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  // Disable SWC minification
-  swcMinify: false,
   // Increase static generation timeout
   staticPageGenerationTimeout: 180,
-  // Add experimental configuration to help with Edge compatibility
-  experimental: {
-    // Enable serverActions
-    serverActions: true,
-  },
+  // Note: SWC Minifier will be mandatory in the next major version
+  // We'll keep it enabled for better performance
+  swcMinify: true,
+  // No need for experimental serverActions as they're enabled by default in Next.js 14+
 }
 
 module.exports = nextConfig
