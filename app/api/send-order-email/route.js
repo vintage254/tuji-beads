@@ -69,18 +69,24 @@ export async function POST(request) {
       emailPassword: process.env.EMAIL_PASSWORD ? 'Set' : 'Not set'
     });
     
-    // Create email transporter
+    // Log more detailed information about the email configuration
+    console.log('Email sending attempt for order:', orderId);
+    console.log('Email will be sent to admin:', 'derricknjuguna414@gmail.com');
+    console.log('Email will be sent to customer:', user.email);
+    
+    // Create email transporter with more robust configuration
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      host: 'smtp.gmail.com',
+      port: 465,
+      secure: true, // use SSL
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD
       },
-      // Add these settings to improve reliability
       tls: {
         rejectUnauthorized: false
       },
-      debug: process.env.NODE_ENV === 'development'
+      debug: true // Always enable debug for troubleshooting
     });
 
     // Create email content
@@ -107,13 +113,34 @@ export async function POST(request) {
       `
     };
 
-    // Send email
+    // Verify connection configuration
+    try {
+      console.log('Verifying email transport connection...');
+      await new Promise((resolve, reject) => {
+        // verify connection configuration
+        transporter.verify(function (error, success) {
+          if (error) {
+            console.error('Email transport verification failed:', error);
+            reject(error);
+          } else {
+            console.log('Email transport is ready to send messages');
+            resolve(success);
+          }
+        });
+      });
+    } catch (verifyError) {
+      console.error('Email transport verification error:', verifyError);
+      // Continue anyway, as some providers don't support verify
+    }
+    
+    // Send email to admin
     try {
       console.log('Sending notification email to admin...');
       const adminEmailResult = await transporter.sendMail(emailContent);
       console.log('Admin email sent successfully:', adminEmailResult.messageId);
     } catch (adminEmailError) {
       console.error('Failed to send admin notification email:', adminEmailError);
+      console.error('Admin email error details:', adminEmailError.message);
       // Continue to customer email even if admin email fails
     }
     
@@ -151,6 +178,7 @@ export async function POST(request) {
       console.log('Customer email sent successfully:', customerEmailResult.messageId);
     } catch (customerEmailError) {
       console.error('Failed to send customer confirmation email:', customerEmailError);
+      console.error('Customer email error details:', customerEmailError.message);
       // Return partial success if at least admin email was sent
       return NextResponse.json({ 
         success: true, 

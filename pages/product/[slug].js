@@ -7,13 +7,37 @@ import { useStateContext } from '../../context/StateContext';
 
 const ProductDetails = ({ product, products }) => {
     const [index, setIndex] = useState(0);
+    const [isLoading, setIsLoading] = useState(true);
     const { decQty, incQty, qty, onAdd, setShowCart } = useStateContext();
+    
+    // Handle loading state for fallback pages
+    React.useEffect(() => {
+        if (product) {
+            setIsLoading(false);
+        }
+    }, [product]);
 
+    // Show loading state
+    if (isLoading) {
+        return (
+            <div className="product-loading-container">
+                <h2>Loading product information...</h2>
+            </div>
+        );
+    }
+
+    // Handle case where product is not found
     if (!product) {
         return (
             <div className="product-error-container">
                 <h1>Product not found</h1>
                 <p>Don&apos;t see what you&apos;re looking for?</p>
+                <button 
+                    onClick={() => window.location.href = '/'}
+                    className="btn"
+                >
+                    Return to Home
+                </button>
             </div>
         );
     }
@@ -134,30 +158,48 @@ export const getStaticPaths = async () => {
             }
         }));
 
+        console.log('Generated product paths:', paths.map(p => p.params.slug));
+
         return {
             paths,
-            fallback: 'blocking'
+            // Change to true to allow fallback to client-side rendering
+            // This will help with 404 errors by showing a loading state instead
+            fallback: true
         };
     } catch (error) {
         console.error('Error in getStaticPaths:', error);
         return {
             paths: [],
-            fallback: 'blocking'
+            fallback: true
         };
     }
 }
 
 export const getStaticProps = async ({ params }) => {
     try {
-        // Safely access slug parameter
-        const slug = params?.slug || '';
-        
-        const query = `*[_type == "product" && slug.current == '${slug}'][0]`;
-        const product = await client.fetch(query).catch(error => {
+        // Handle case where params might be undefined
+        if (!params || !params.slug) {
+            console.error('Missing slug parameter in getStaticProps');
+            return {
+                notFound: true,
+                revalidate: 60
+            };
+        }
+
+        const slug = params.slug;
+        console.log('Fetching product data for slug:', slug);
+
+        // Use parameterized query to prevent injection
+        const query = `*[_type == "product" && slug.current == $slug][0]`;
+        const product = await client.fetch(query, { slug }).catch(error => {
             console.error(`Error fetching product with slug ${slug}:`, error);
             return null;
         });
 
+        // Log product fetch result
+        console.log(`Product fetch result for ${slug}:`, product ? 'Found' : 'Not found');
+
+        // Get related products
         const productsQuery = '*[_type == "product"]';
         const products = await client.fetch(productsQuery).catch(error => {
             console.error('Error fetching related products:', error);
@@ -166,8 +208,10 @@ export const getStaticProps = async ({ params }) => {
 
         // If product not found, return notFound
         if (!product) {
+            console.log(`Product not found for slug: ${slug}, returning 404`);
             return {
-                notFound: true
+                notFound: true,
+                revalidate: 60 // Check again after a minute
             };
         }
 
@@ -176,15 +220,13 @@ export const getStaticProps = async ({ params }) => {
                 product, 
                 products: products || [] 
             },
-            revalidate: 60, // Revalidate every 60 seconds
+            revalidate: 3600, // Revalidate every hour
         };
     } catch (error) {
         console.error('Error in getStaticProps:', error);
         return {
-            props: { 
-                product: null, 
-                products: [] 
-            }
+            notFound: true,
+            revalidate: 60
         };
     }
 }
