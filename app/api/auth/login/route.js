@@ -1,10 +1,9 @@
 import { client } from '../../../../lib/client';
 import { NextResponse } from 'next/server';
 import bcrypt from 'bcryptjs';
-import { generateToken } from '../../../../lib/auth';
 
-// Using Edge Runtime since we've updated auth to use jose
-export const runtime = 'edge';
+// Set this route to be dynamically rendered
+export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {
@@ -51,37 +50,48 @@ export async function POST(request) {
     // Remove password from user object before sending response
     const { password: _, ...userWithoutPassword } = user;
 
-    // Generate JWT token using jose
-    const token = await generateToken({
-      _id: user._id,
-      email: user.email,
-      role: user.role || 'customer'
-    });
+    // Create a simple session identifier
+    const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    
+    // Update user in Sanity with session info
+    try {
+      await client.patch(user._id)
+        .set({
+          lastLogin: new Date().toISOString(),
+          sessionId: sessionId
+        })
+        .commit();
+      
+      console.log('Updated user session in Sanity');
+    } catch (updateError) {
+      console.error('Failed to update user session in Sanity:', updateError);
+      // Continue anyway, not critical
+    }
 
-    // Set cookie with the token
+    // Set cookie with simple session info
     const response = NextResponse.json({
       user: userWithoutPassword,
-      token  // Include token in response body for client-side storage
+      sessionId: sessionId
     });
 
-    // Set HTTP-only cookie for server-side auth
+    // Set cookies for session management
     response.cookies.set({
-      name: 'auth_token',
-      value: token,
+      name: 'user_session',
+      value: sessionId,
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/'
     });
     
-    // Set a non-HTTP-only cookie for client-side detection of login state
+    // Set user email in a non-HTTP-only cookie for client access
     response.cookies.set({
-      name: 'auth_status',
-      value: 'logged_in',
+      name: 'user_email',
+      value: user.email,
       httpOnly: false,
       secure: process.env.NODE_ENV === 'production',
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 60 * 60 * 24 * 7, // 7 days
       path: '/'
     });

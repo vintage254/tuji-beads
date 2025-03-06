@@ -1,33 +1,14 @@
 import { client } from '../../../../lib/client';
 import { NextResponse } from 'next/server';
-import { isAuthenticated } from '../../../../lib/auth';
 
-// Using Edge Runtime since we've updated auth to use jose
-export const runtime = 'edge';
+// Set this route to be dynamically rendered
+export const dynamic = 'force-dynamic';
 
 export async function POST(request) {
   try {
-    // Log the authorization header for debugging
-    const authHeader = request.headers.get('Authorization');
-    console.log('Authorization header present:', !!authHeader);
-    if (authHeader) {
-      console.log('Authorization header format:', authHeader.startsWith('Bearer ') ? 'Valid Bearer format' : 'Invalid format');
-    }
+    console.log('=== ORDER CREATE API CALLED ===');
     
-    // Check if the user is authenticated
-    const authUser = await isAuthenticated(request);
-    
-    if (!authUser) {
-      console.error('Authentication failed: No valid user found');
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-    
-    // Log authentication success
-    console.log('User authenticated:', authUser.userId);
-    
+    // Simple user identification - either from request body or cookie
     let requestData;
     try {
       requestData = await request.json();
@@ -39,7 +20,7 @@ export async function POST(request) {
       );
     }
     
-    const { items, totalAmount, userId } = requestData;
+    const { items, totalAmount, userId, email } = requestData;
     
     // Validate required fields
     if (!items || !Array.isArray(items) || items.length === 0) {
@@ -56,25 +37,43 @@ export async function POST(request) {
       );
     }
     
-    // Use the authenticated user's ID if userId is not provided
-    const userIdToUse = userId || authUser.userId;
-    
-    // Verify that the authenticated user is creating their own order
-    if (authUser.userId !== userIdToUse && authUser.role !== 'admin') {
-      console.error('Authorization failed: User tried to create order for another user');
+    if (!userId && !email) {
       return NextResponse.json(
-        { error: 'Unauthorized to create order for another user' },
-        { status: 403 }
+        { error: 'User ID or email is required' },
+        { status: 400 }
       );
+    }
+    
+    // Find or create user in Sanity
+    let userIdToUse = userId;
+    
+    // If we only have email, find the user by email
+    if (!userIdToUse && email) {
+      const existingUser = await client.fetch(
+        `*[_type == "user" && email == $email][0]._id`,
+        { email }
+      );
+      
+      if (existingUser) {
+        userIdToUse = existingUser;
+      } else {
+        // User doesn't exist, but we'll create the order anyway and link by email
+        console.log('User not found in database, creating order with email reference');
+      }
     }
 
     // Create order document
     const orderDoc = {
       _type: 'order',
-      user: {
-        _type: 'reference',
-        _ref: userIdToUse
-      },
+      // If we have a user ID, reference it, otherwise store email directly
+      ...(userIdToUse ? {
+        user: {
+          _type: 'reference',
+          _ref: userIdToUse
+        }
+      } : {
+        userEmail: email // Store email directly if no user ID
+      }),
       orderItems: items.map(item => ({
         product: {
           _type: 'reference',
@@ -109,14 +108,14 @@ export async function POST(request) {
         const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/send-order-email`, {
           method: 'POST',
           headers: { 
-            'Content-Type': 'application/json',
-            'Authorization': request.headers.get('Authorization') || ''
+            'Content-Type': 'application/json'
           },
           body: JSON.stringify({
             orderId: createdOrder._id,
             items,
             totalAmount,
-            userId: userIdToUse
+            userId: userIdToUse,
+            email: email // Include email for notification
           })
         });
         
@@ -144,21 +143,14 @@ export async function POST(request) {
   } catch (error) {
     console.error('Error creating order:', error);
     
-    // Provide more detailed error information for debugging
-    let statusCode = 500;
-    let errorMessage = 'Failed to create order';
-    
-    if (error.message && error.message.includes('authentication')) {
-      statusCode = 401;
-      errorMessage = 'Authentication error: ' + error.message;
-    } else if (error.message && error.message.includes('permission')) {
-      statusCode = 403;
-      errorMessage = 'Permission denied: ' + error.message;
-    }
-    
+    // Simplified error handling
     return NextResponse.json(
-      { error: errorMessage, message: error.message, stack: process.env.NODE_ENV === 'development' ? error.stack : undefined },
-      { status: statusCode }
+      { 
+        error: 'Failed to create order', 
+        message: error.message,
+        stack: process.env.NODE_ENV === 'development' ? error.stack : undefined 
+      },
+      { status: 500 }
     );
   }
 }

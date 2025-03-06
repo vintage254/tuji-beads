@@ -1,67 +1,84 @@
 import { client } from '../../../lib/client';
 import { NextResponse } from 'next/server';
-import { isAuthenticated, verifyToken } from '../../../lib/auth';
 
 // Set this route to be dynamically rendered
 export const dynamic = 'force-dynamic';
 
-// Using Edge Runtime since we've updated auth to use jose
-export const runtime = 'edge';
-
 export async function GET(request) {
   try {
-    // Get the user ID from the query parameter
+    // Get the user identifier from the query parameter (can be ID or email)
     const { searchParams } = new URL(request.url);
     const userId = searchParams.get('userId');
+    const email = searchParams.get('email');
     
-    // Authenticate the user
-    const authUser = await isAuthenticated(request);
-    
-    if (!authUser) {
+    // We need either userId or email
+    if (!userId && !email) {
       return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
-    }
-    
-    // If no userId in query params, use the one from the token
-    let userIdToUse = userId || authUser.userId;
-    
-    // Admin can view any user's orders, regular users can only view their own
-    if (authUser.role !== 'admin' && authUser.userId !== userIdToUse) {
-      return NextResponse.json(
-        { error: 'Unauthorized to view these orders' },
-        { status: 403 }
-      );
-    }
-    
-    if (!userIdToUse) {
-      return NextResponse.json(
-        { error: 'User ID is required' },
+        { error: 'User ID or email is required' },
         { status: 400 }
       );
     }
+    
+    // If we have email but no userId, try to find the user by email
+    let userIdToUse = userId;
+    if (!userIdToUse && email) {
+      const user = await client.fetch(
+        `*[_type == "user" && email == $email][0]._id`,
+        { email }
+      );
+      
+      if (user) {
+        userIdToUse = user;
+      }
+    }
 
-    // Query for orders
-    const orders = await client.fetch(
-      `*[_type == "order" && user._ref == $userId] | order(_createdAt desc) {
-        _id,
-        _createdAt,
-        status,
-        totalAmount,
-        orderItems[] {
-          product->{
-            _id,
-            name,
-            price,
-            image
-          },
-          quantity,
-          price
-        }
-      }`,
-      { userId: userIdToUse }
-    );
+    // Construct query based on what we have (userId or email)
+    let orders = [];
+    
+    if (userIdToUse) {
+      // Query by user reference if we have userId
+      orders = await client.fetch(
+        `*[_type == "order" && user._ref == $userId] | order(_createdAt desc) {
+          _id,
+          _createdAt,
+          status,
+          totalAmount,
+          orderItems[] {
+            product->{
+              _id,
+              name,
+              price,
+              image
+            },
+            quantity,
+            price
+          }
+        }`,
+        { userId: userIdToUse }
+      );
+    } else if (email) {
+      // Query by email field if we don't have userId
+      orders = await client.fetch(
+        `*[_type == "order" && userEmail == $email] | order(_createdAt desc) {
+          _id,
+          _createdAt,
+          status,
+          totalAmount,
+          userEmail,
+          orderItems[] {
+            product->{
+              _id,
+              name,
+              price,
+              image
+            },
+            quantity,
+            price
+          }
+        }`,
+        { email }
+      );
+    }
 
     return NextResponse.json(orders, { status: 200 });
   } catch (error) {

@@ -48,33 +48,26 @@ const OrderHistory = ({ userId }) => {
       try {
         setLoading(true);
         
-        // Try to get token from multiple sources
-        let authToken;
-        
-        // First try localStorage
+        // Get user email from localStorage if available
+        let userEmail;
         if (typeof window !== 'undefined') {
-          authToken = localStorage.getItem('token');
+          userEmail = localStorage.getItem('userEmail');
         }
         
-        // If not in localStorage, try cookies
-        if (!authToken) {
-          const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-            const [key, value] = cookie.trim().split('=');
-            acc[key] = value;
-            return acc;
-          }, {});
-          
-          // Check for auth_token cookie
-          if (cookies['auth_token']) {
-            authToken = cookies['auth_token'];
-          }
+        // Construct the API URL based on what we have
+        let apiUrl = '/api/orders';
+        if (userId) {
+          apiUrl += `?userId=${userId}`;
+        } else if (userEmail) {
+          apiUrl += `?email=${encodeURIComponent(userEmail)}`;
+        } else {
+          throw new Error('No user identifier available');
         }
         
-        // Prepare headers with token if available
-        const headers = authToken ? { 'Authorization': `Bearer ${authToken}` } : {};
-        console.log('Using auth token:', !!authToken);
+        console.log('Fetching orders from:', apiUrl);
         
-        const response = await fetch(`/api/orders?userId=${userId}`, { headers });
+        // Simple fetch without authentication headers
+        const response = await fetch(apiUrl);
         
         if (!response.ok) {
           throw new Error(`Failed to fetch orders: ${response.status} ${response.statusText}`);

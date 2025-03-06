@@ -11,12 +11,12 @@ export const StateContext = ({ children }) => {
   const [totalQuantities, setTotalQuantities] = useState(0);
   const [qty, setQty] = useState(1);
   const [user, setUser] = useState(null);
-  const [token, setToken] = useState(null);
+  const [sessionId, setSessionId] = useState(null);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
       const storedUser = localStorage.getItem('user');
-      const storedToken = localStorage.getItem('token');
+      const storedEmail = localStorage.getItem('userEmail');
       
       if (storedUser) {
         try {
@@ -27,8 +27,23 @@ export const StateContext = ({ children }) => {
         }
       }
       
-      if (storedToken) {
-        setToken(storedToken);
+      // Store email for easier access
+      if (storedEmail) {
+        if (!user) {
+          // If we have email but no user object, create a minimal one
+          setUser({ email: storedEmail });
+        }
+      }
+      
+      // Get session ID from cookie
+      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+        const [key, value] = cookie.trim().split('=');
+        acc[key] = value;
+        return acc;
+      }, {});
+      
+      if (cookies['user_session']) {
+        setSessionId(cookies['user_session']);
       }
     }
   }, []);
@@ -54,13 +69,15 @@ export const StateContext = ({ children }) => {
       setUser(data.user);
       localStorage.setItem('user', JSON.stringify(data.user));
       
-      // Store token in both state and localStorage for client-side access
-      if (data.token) {
-        setToken(data.token);
-        localStorage.setItem('token', data.token);
-        console.log('Token stored in localStorage and state');
+      // Store email for easier access
+      localStorage.setItem('userEmail', data.user.email);
+      
+      // Store session ID
+      if (data.sessionId) {
+        setSessionId(data.sessionId);
+        console.log('Session established');
       } else {
-        console.warn('No token received from login response');
+        console.warn('No session ID received from login response');
       }
 
       return data.user;
@@ -91,13 +108,15 @@ export const StateContext = ({ children }) => {
       setUser(data.user);
       localStorage.setItem('user', JSON.stringify(data.user));
       
-      // Store token in both state and localStorage for client-side access
-      if (data.token) {
-        setToken(data.token);
-        localStorage.setItem('token', data.token);
-        console.log('Token stored in localStorage and state after registration');
+      // Store email for easier access
+      localStorage.setItem('userEmail', userData.email);
+      
+      // Store session ID
+      if (data.sessionId) {
+        setSessionId(data.sessionId);
+        console.log('Session established after registration');
       } else {
-        console.warn('No token received from registration response');
+        console.warn('No session ID received from registration response');
       }
 
       return data.user;
@@ -109,9 +128,13 @@ export const StateContext = ({ children }) => {
 
   const logout = () => {
     setUser(null);
-    setToken(null);
+    setSessionId(null);
     localStorage.removeItem('user');
-    localStorage.removeItem('token');
+    localStorage.removeItem('userEmail');
+    
+    // Clear cookies
+    document.cookie = 'user_session=; Max-Age=0; path=/; domain=' + window.location.hostname;
+    document.cookie = 'user_email=; Max-Age=0; path=/; domain=' + window.location.hostname;
     
     setCartItems([]);
     setTotalPrice(0);
@@ -121,39 +144,30 @@ export const StateContext = ({ children }) => {
   };
 
   const isAuthenticated = () => {
-    return !!user && !!token;
+    return !!user && (!!sessionId || document.cookie.includes('user_session='));
   };
 
   const authenticatedFetch = async (url, options = {}) => {
-    // First check the token in state
-    let currentToken = token;
-    
-    // If no token in state, try to get it from localStorage as a fallback
-    if (!currentToken && typeof window !== 'undefined') {
-      currentToken = localStorage.getItem('token');
-      
-      // If found in localStorage but not in state, update state
-      if (currentToken) {
-        setToken(currentToken);
-        console.log('Token retrieved from localStorage');
-      } else {
-        console.error('No authentication token available in state or localStorage');
-        throw new Error('No authentication token available. Please sign in again.');
-      }
+    // Get user email from state or localStorage
+    let userEmail = user?.email;
+    if (!userEmail && typeof window !== 'undefined') {
+      userEmail = localStorage.getItem('userEmail');
     }
 
-    // Prepare headers with token
+    // Prepare headers with user email if available
     const headers = {
       'Content-Type': 'application/json',
-      ...options.headers,
-      'Authorization': `Bearer ${currentToken}`
+      ...options.headers
     };
+    
+    if (userEmail) {
+      headers['X-User-Email'] = userEmail;
+    }
 
-    console.log('Making authenticated request to:', url);
-    console.log('Authorization header present:', !!headers['Authorization']);
+    console.log('Making request to:', url);
 
     try {
-      // Include credentials to send cookies
+      // Include credentials to send cookies (session ID)
       const response = await fetch(url, {
         ...options,
         headers,
@@ -162,16 +176,14 @@ export const StateContext = ({ children }) => {
       
       // Handle authentication errors
       if (response.status === 401) {
-        // Token might be expired or invalid
         console.error('Authentication failed with status 401');
         
-        // Clear the invalid token
+        // Clear user data on auth failure
         if (typeof window !== 'undefined') {
-          localStorage.removeItem('token');
-          setToken(null);
-          // Also clear user data on auth failure
           localStorage.removeItem('user');
+          localStorage.removeItem('userEmail');
           setUser(null);
+          setSessionId(null);
         }
         
         throw new Error('Authentication failed. Please sign in again.');
@@ -179,7 +191,7 @@ export const StateContext = ({ children }) => {
       
       return response;
     } catch (error) {
-      console.error('Error in authenticatedFetch:', error);
+      console.error('Error in fetch:', error);
       throw error;
     }
   };
