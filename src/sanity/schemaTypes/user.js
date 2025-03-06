@@ -51,6 +51,50 @@ const user = {
       title: 'Registration Date',
       type: 'datetime',
       initialValue: () => new Date().toISOString()
+    },
+    {
+      name: 'lastLogin',
+      title: 'Last Login',
+      type: 'datetime'
+    },
+    {
+      name: 'sessions',
+      title: 'Sessions',
+      type: 'array',
+      of: [
+        {
+          type: 'object',
+          fields: [
+            {
+              name: 'sessionId',
+              title: 'Session ID',
+              type: 'string'
+            },
+            {
+              name: 'createdAt',
+              title: 'Created At',
+              type: 'datetime'
+            },
+            {
+              name: 'lastActive',
+              title: 'Last Active',
+              type: 'datetime'
+            }
+          ]
+        }
+      ]
+    },
+    {
+      name: 'role',
+      title: 'Role',
+      type: 'string',
+      options: {
+        list: [
+          { title: 'Customer', value: 'customer' },
+          { title: 'Admin', value: 'admin' }
+        ]
+      },
+      initialValue: 'customer'
     }
   ]
 };

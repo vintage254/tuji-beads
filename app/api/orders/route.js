@@ -12,6 +12,9 @@ export async function GET(request) {
     const sessionId = cookieStore.get('user_session')?.value;
     const userEmailFromCookie = cookieStore.get('user_email')?.value;
     
+    console.log('Session ID from cookie:', sessionId);
+    console.log('User email from cookie:', userEmailFromCookie);
+    
     // Check for authentication via session cookie
     if (!sessionId) {
       console.error('No session ID found in cookies');
@@ -37,10 +40,13 @@ export async function GET(request) {
     // Verify the session is valid for this user
     let sessionValid = false;
     try {
+      console.log('Checking session validity for:', { userId, email, sessionId });
       const userWithSession = await client.fetch(
-        `*[_type == "user" && ((_id == $userId) || (email == $email)) && sessions[].sessionId == $sessionId][0]`,
+        `*[_type == "user" && ((_id == $userId) || (email == $email)) && count(sessions[sessionId == $sessionId]) > 0][0]`,
         { userId, email, sessionId }
       );
+      
+      console.log('Session validation result:', userWithSession ? 'Valid session found' : 'No valid session found');
       
       if (userWithSession) {
         sessionValid = true;

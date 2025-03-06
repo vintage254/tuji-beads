@@ -54,47 +54,61 @@ export async function POST(request) {
     const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const now = new Date().toISOString();
     
+    console.log('Generated new session ID:', sessionId);
+    
     // Update user in Sanity with session info
     try {
-      // First check if the user already has sessions array
-      const existingUser = await client.fetch(
-        `*[_type == "user" && _id == $userId][0]{
-          sessions
-        }`,
-        { userId: user._id }
-      );
+      console.log('Updating user session in Sanity for user ID:', user._id);
       
-      if (existingUser && existingUser.sessions) {
-        // User has existing sessions, add new one to array
-        await client.patch(user._id)
-          .set({
-            lastLogin: now,
-          })
-          .setIfMissing({ sessions: [] })
-          .append('sessions', [{ 
-            sessionId: sessionId,
-            createdAt: now,
-            lastActive: now
-          }])
-          .commit();
-      } else {
-        // User doesn't have sessions array yet, create it
-        await client.patch(user._id)
-          .set({
-            lastLogin: now,
-            sessions: [{ 
-              sessionId: sessionId,
-              createdAt: now,
-              lastActive: now
-            }]
-          })
-          .commit();
-      }
+      // Use a single patch operation with setIfMissing to handle both cases
+      const patchResult = await client.patch(user._id)
+        .set({
+          lastLogin: now,
+        })
+        .setIfMissing({ sessions: [] })
+        .append('sessions', [{ 
+          sessionId: sessionId,
+          createdAt: now,
+          lastActive: now
+        }])
+        .commit();
       
-      console.log('Updated user session in Sanity');
+      console.log('Session update successful, session count:', 
+        patchResult.sessions ? patchResult.sessions.length : 'unknown');
+
+      
     } catch (updateError) {
       console.error('Failed to update user session in Sanity:', updateError);
       // Continue anyway, not critical
+      
+      // Try a fallback approach if the append method failed
+      try {
+        console.log('Attempting fallback session update method');
+        const existingUser = await client.fetch(
+          `*[_type == "user" && _id == $userId][0]`,
+          { userId: user._id }
+        );
+        
+        // Create or update sessions array directly
+        const sessions = existingUser.sessions || [];
+        sessions.push({ 
+          sessionId: sessionId,
+          createdAt: now,
+          lastActive: now
+        });
+        
+        await client.patch(user._id)
+          .set({
+            lastLogin: now,
+            sessions: sessions
+          })
+          .commit();
+          
+        console.log('Fallback session update successful');
+      } catch (fallbackError) {
+        console.error('Fallback session update also failed:', fallbackError);
+        // Still continue, as authentication can work with just cookies
+      }
     }
 
     // Set cookie with simple session info

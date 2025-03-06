@@ -38,7 +38,10 @@ export async function POST(request) {
     const sessionId = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
     const now = new Date().toISOString();
     
+    console.log('Generated new session ID for registration:', sessionId);
+    
     // Create user document with session
+    console.log('Creating new user with email:', email);
     const user = await client.create({
       _type: 'user',
       name,
@@ -54,11 +57,29 @@ export async function POST(request) {
         lastActive: now
       }]
     });
+    
+    console.log('User created successfully with ID:', user._id);
 
     // Return user data without password
     const { password: _, ...userWithoutPassword } = user;
 
     // Session is already created during user creation, no need to update again
+    // Verify the session was created properly
+    try {
+      const verifyUser = await client.fetch(
+        `*[_type == "user" && _id == $userId][0]{sessions}`,
+        { userId: user._id }
+      );
+      
+      if (verifyUser && verifyUser.sessions && verifyUser.sessions.length > 0) {
+        console.log('Verified session creation, session count:', verifyUser.sessions.length);
+      } else {
+        console.warn('Session verification failed, sessions may not be properly initialized');
+      }
+    } catch (verifyError) {
+      console.error('Error verifying session creation:', verifyError);
+      // Continue anyway, not critical
+    }
 
     // Set cookie with simple session info
     const response = NextResponse.json({

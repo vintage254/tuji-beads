@@ -14,6 +14,9 @@ export async function POST(request) {
     const sessionId = cookieStore.get('user_session')?.value;
     const userEmail = cookieStore.get('user_email')?.value;
     
+    console.log('Session ID from cookie:', sessionId);
+    console.log('User email from cookie:', userEmail);
+    
     // Check for authentication via session cookie
     if (!sessionId) {
       console.error('No session ID found in cookies');
@@ -70,10 +73,13 @@ export async function POST(request) {
       if (emailToUse) {
         try {
           // Check if the session is valid for this user
+          console.log('Checking session validity for email:', emailToUse, 'sessionId:', sessionId);
           const userWithSession = await client.fetch(
-            `*[_type == "user" && email == $email && sessions[].sessionId == $sessionId][0]`,
+            `*[_type == "user" && email == $email && count(sessions[sessionId == $sessionId]) > 0][0]`,
             { email: emailToUse, sessionId }
           );
+          
+          console.log('Session validation result:', userWithSession ? 'Valid session found' : 'No valid session found');
           
           if (!userWithSession) {
             console.error('Invalid session for user');

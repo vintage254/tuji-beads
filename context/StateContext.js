@@ -15,12 +15,14 @@ export const StateContext = ({ children }) => {
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
+      console.log('Initializing authentication state');
       const storedUser = localStorage.getItem('user');
       const storedEmail = localStorage.getItem('userEmail');
       
       if (storedUser) {
         try {
           setUser(JSON.parse(storedUser));
+          console.log('User loaded from localStorage');
         } catch (error) {
           console.error('Error parsing stored user:', error);
           localStorage.removeItem('user');
@@ -32,19 +34,27 @@ export const StateContext = ({ children }) => {
         if (!user) {
           // If we have email but no user object, create a minimal one
           setUser({ email: storedEmail });
+          console.log('Created minimal user object from email:', storedEmail);
         }
       }
       
       // Get session ID from cookie
       const cookies = document.cookie.split(';').reduce((acc, cookie) => {
         const [key, value] = cookie.trim().split('=');
-        acc[key] = value;
+        if (key && value) acc[key] = value;
         return acc;
       }, {});
       
       if (cookies['user_session']) {
         setSessionId(cookies['user_session']);
         console.log('Session ID retrieved from cookie:', cookies['user_session']);
+        
+        // If we have a session but no user, try to create minimal user from email cookie
+        if (!storedUser && !user && cookies['user_email']) {
+          setUser({ email: cookies['user_email'] });
+          localStorage.setItem('userEmail', cookies['user_email']);
+          console.log('Created user from cookie email:', cookies['user_email']);
+        }
       } else {
         console.log('No session ID found in cookies');
       }
@@ -192,11 +202,32 @@ export const StateContext = ({ children }) => {
   const isAuthenticated = () => {
     // Check for user and valid session
     const hasUser = !!user;
-    const hasSessionCookie = typeof window !== 'undefined' && document.cookie.includes('user_session=');
+    
+    // Properly parse cookies
+    let hasSessionCookie = false;
+    if (typeof window !== 'undefined') {
+      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+        const [key, value] = cookie.trim().split('=');
+        if (key && value) acc[key] = value;
+        return acc;
+      }, {});
+      
+      hasSessionCookie = !!cookies['user_session'];
+    }
+    
     const hasSessionState = !!sessionId;
     
+    // Check if we have both user info and a session
     const isAuth = hasUser && (hasSessionState || hasSessionCookie);
-    console.log('Authentication check:', { hasUser, hasSessionCookie, hasSessionState, isAuth });
+    
+    console.log('Authentication check:', { 
+      hasUser, 
+      hasSessionCookie, 
+      hasSessionState, 
+      userEmail: user?.email || localStorage.getItem('userEmail'),
+      isAuth 
+    });
+    
     return isAuth;
   };
 
@@ -217,9 +248,26 @@ export const StateContext = ({ children }) => {
       headers['X-User-Email'] = userEmail;
     }
     
-    // Check if we have a session ID
-    const currentSessionId = sessionId || (typeof window !== 'undefined' && 
-      document.cookie.split(';').find(c => c.trim().startsWith('user_session='))?.split('=')[1]);
+    // Check if we have a session ID from cookie
+    let currentSessionId = null;
+    if (typeof window !== 'undefined') {
+      // Parse cookies properly
+      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+        const [key, value] = cookie.trim().split('=');
+        if (key && value) acc[key] = value;
+        return acc;
+      }, {});
+      
+      currentSessionId = sessionId || cookies['user_session'];
+      
+      console.log('Cookie check for authenticated request:', {
+        hasCookieSession: !!cookies['user_session'],
+        hasStateSession: !!sessionId,
+        userEmail
+      });
+    } else {
+      currentSessionId = sessionId;
+    }
     
     if (currentSessionId) {
       console.log('Session ID available for request');
@@ -241,21 +289,87 @@ export const StateContext = ({ children }) => {
       if (response.status === 401) {
         console.error('Authentication failed with status 401');
         
-        // Clear user data on auth failure
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('user');
-          localStorage.removeItem('userEmail');
-          setUser(null);
-          setSessionId(null);
+        // Attempt to refresh authentication state
+        const refreshed = await refreshAuthState();
+        if (refreshed) {
+          // Retry the request once with refreshed auth
+          console.log('Retrying request after auth refresh');
+          return fetch(url, {
+            ...options,
+            headers: {
+              'Content-Type': 'application/json',
+              ...options.headers,
+              'X-User-Email': user?.email || userEmail
+            },
+            credentials: 'include'
+          });
+        } else {
+          // Clear user data on auth failure if refresh failed
+          if (typeof window !== 'undefined') {
+            localStorage.removeItem('user');
+            localStorage.removeItem('userEmail');
+            setUser(null);
+            setSessionId(null);
+          }
+          
+          toast.error('Your session has expired. Please sign in again.');
+          throw new Error('Authentication failed. Please sign in again.');
         }
-        
-        throw new Error('Authentication failed. Please sign in again.');
       }
       
       return response;
     } catch (error) {
       console.error('Error in authenticatedFetch:', error);
       throw error;
+    }
+  };
+  
+  // Helper function to refresh authentication state
+  const refreshAuthState = async () => {
+    try {
+      // Check if we have a session cookie
+      if (typeof window !== 'undefined') {
+        const cookies = document.cookie.split(';').reduce((acc, cookie) => {
+          const [key, value] = cookie.trim().split('=');
+          if (key && value) acc[key] = value;
+          return acc;
+        }, {});
+        
+        if (cookies['user_session'] && cookies['user_email']) {
+          console.log('Found valid session cookies, refreshing state');
+          
+          // Update session ID in state if needed
+          if (!sessionId) {
+            setSessionId(cookies['user_session']);
+          }
+          
+          // Update user in state if needed
+          if (!user || !user.email) {
+            // Try to get user from localStorage first
+            const storedUser = localStorage.getItem('user');
+            if (storedUser) {
+              try {
+                setUser(JSON.parse(storedUser));
+              } catch (e) {
+                // If parsing fails, create minimal user object
+                setUser({ email: cookies['user_email'] });
+                localStorage.setItem('userEmail', cookies['user_email']);
+              }
+            } else {
+              // Create minimal user object
+              setUser({ email: cookies['user_email'] });
+              localStorage.setItem('userEmail', cookies['user_email']);
+            }
+          }
+          
+          return true; // Successfully refreshed auth state
+        }
+      }
+      
+      return false; // Could not refresh auth state
+    } catch (error) {
+      console.error('Error refreshing auth state:', error);
+      return false;
     }
   };
 

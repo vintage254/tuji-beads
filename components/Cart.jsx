@@ -27,15 +27,30 @@ const Cart = () => {
     
     // Check if user is logged in
     if (!user || !isAuthenticated()) {
+      console.log('Authentication check failed during checkout:', { user, authenticated: isAuthenticated() });
       toast.error('Please sign in to place an order');
       setShowCart(false);
       setShowAuth(true);
       return;
     }
     
+    // Double-check we have the necessary user information
+    if (!user.email) {
+      console.error('User object missing email during checkout');
+      toast.error('User information incomplete. Please sign in again.');
+      setShowCart(false);
+      setShowAuth(true);
+      return;
+    }
+    
     try {
+      // Show loading toast
+      const loadingToast = toast.loading('Processing your order...');
+      
       // Save cart to localStorage before attempting order
       localStorage.setItem('cartItems', JSON.stringify(cartItems));
+      
+      console.log('Placing order for user:', user.email);
       
       // Create order through API route using authenticatedFetch
       const response = await authenticatedFetch('/api/orders/create', {
@@ -52,13 +67,28 @@ const Cart = () => {
           email: user.email
         })
       });
+      
+      // Dismiss loading toast
+      toast.dismiss(loadingToast);
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to create order');
+        console.error('Order creation failed with status:', response.status);
+        const errorData = await response.json();
+        console.error('Error details:', errorData);
+        
+        // Handle specific error cases
+        if (response.status === 401) {
+          toast.error('Your session has expired. Please sign in again.');
+          setShowCart(false);
+          setShowAuth(true);
+          return;
+        }
+        
+        throw new Error(errorData.error || errorData.message || 'Failed to create order');
       }
 
       const result = await response.json();
+      console.log('Order creation response:', result);
       
       // Check if order was created successfully
       if (result.success) {
@@ -68,19 +98,53 @@ const Cart = () => {
         setTotalQuantities(0);
         localStorage.removeItem('cartItems');
         
-        // Show success message
-        toast.success('Order placed successfully! We will contact you shortly.');
+        // Show success message with order ID
+        toast.success(`Order #${result.order._id} placed successfully! We will contact you shortly.`);
         
-        // Close cart and redirect to order history page
+        // Close cart and redirect to order history page after a short delay
         setShowCart(false);
-        router.push('/order-history');
+        
+        // Wait a moment before redirecting to ensure state is updated
+        setTimeout(() => {
+          router.push('/order-history');
+        }, 500);
       } else {
         throw new Error(result.error || 'Failed to create order');
       }
       
     } catch (error) {
       console.error('Error creating order:', error);
-      toast.error(error.message || 'Failed to place order. Please try again.');
+      
+      // Handle different error scenarios
+      if (error.message.includes('Authentication failed') || error.message.includes('session')) {
+        toast.error('Authentication error. Please sign in again.');
+        setShowCart(false);
+        setShowAuth(true);
+      } else if (error.message.includes('network') || error.message.includes('connection')) {
+        toast.error('Network error. Please check your connection and try again.');
+      } else {
+        toast.error(error.message || 'Failed to place order. Please try again.');
+      }
+      
+      // Restore cart from localStorage if available
+      try {
+        const savedCart = localStorage.getItem('cartItems');
+        if (savedCart && cartItems.length === 0) {
+          const parsedCart = JSON.parse(savedCart);
+          setCartItems(parsedCart);
+          
+          // Recalculate totals
+          const totalPrice = parsedCart.reduce((total, item) => total + (item.price * item.quantity), 0);
+          const totalQuantities = parsedCart.reduce((total, item) => total + item.quantity, 0);
+          
+          setTotalPrice(totalPrice);
+          setTotalQuantities(totalQuantities);
+          
+          console.log('Restored cart from localStorage after order failure');
+        }
+      } catch (restoreError) {
+        console.error('Failed to restore cart from localStorage:', restoreError);
+      }
     }
   };
 
