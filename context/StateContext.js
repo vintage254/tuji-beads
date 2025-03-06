@@ -24,13 +24,7 @@ export const StateContext = ({ children }) => {
     }, {});
   };
 
-  // Check if the user is authenticated
-  const isAuthenticated = () => {
-    // Check for both user object and session cookie
-    const cookies = parseCookies();
-    const hasSessionCookie = !!cookies['user_session'];
-    return !!user && hasSessionCookie;
-  };
+  // parseCookies function is used by other methods
 
   // Attempt to restore session from cookies
   const restoreSession = async () => {
@@ -313,7 +307,8 @@ export const StateContext = ({ children }) => {
     toast.success('Logged out successfully');
   };
 
-  const isAuthenticated = () => {
+  // Check if user is authenticated with valid session
+  const checkUserAuthentication = () => {
     // Check for user and valid session
     const hasUser = !!user;
     
@@ -621,7 +616,7 @@ export const StateContext = ({ children }) => {
         login,
         register,
         logout,
-        isAuthenticated,
+        isAuthenticated: checkUserAuthentication,
         authenticatedFetch,
         sessionId
       }}
