@@ -200,32 +200,39 @@ export async function POST(request) {
       );
     }
 
-    // Try to send email notification if BASE_URL is defined
-    if (process.env.NEXT_PUBLIC_BASE_URL) {
-      try {
-        const emailResponse = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/send-order-email`, {
-          method: 'POST',
-          headers: { 
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            orderId: createdOrder._id,
-            items,
-            totalAmount,
-            userId: userIdToUse,
-            email: email // Include email for notification
-          })
-        });
-        
-        if (!emailResponse.ok) {
-          console.warn('Email notification returned non-OK response:', await emailResponse.text());
-        }
-      } catch (emailError) {
-        console.error('Failed to send email notification:', emailError);
-        // Continue even if email fails
+    // Try to send email notification
+    try {
+      // Use absolute URL or relative URL based on environment
+      const emailEndpoint = process.env.NEXT_PUBLIC_BASE_URL 
+        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/send-order-email`
+        : '/api/send-order-email';
+      
+      console.log('Sending email notification to:', emailEndpoint);
+      
+      const emailResponse = await fetch(emailEndpoint, {
+        method: 'POST',
+        headers: { 
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          orderId: createdOrder._id,
+          items,
+          totalAmount,
+          userId: userIdToUse,
+          email: userEmailToUse || email // Use the most reliable email we have
+        })
+      });
+      
+      if (!emailResponse.ok) {
+        const errorText = await emailResponse.text();
+        console.error('Email notification returned non-OK response:', errorText);
+        console.error('Email notification status:', emailResponse.status);
+      } else {
+        console.log('Email notification sent successfully');
       }
-    } else {
-      console.log('Skipping email notification: NEXT_PUBLIC_BASE_URL not defined');
+    } catch (emailError) {
+      console.error('Failed to send email notification:', emailError);
+      // Continue even if email fails
     }
 
     return NextResponse.json({

@@ -54,6 +54,12 @@ const FooterBanner = ({ footerBanner }) => {
         .banner-desc {
           display: flex;
           justify-content: space-between;
+          position: relative;
+        }
+        
+        .banner-desc .left {
+          flex: 1;
+          max-width: 300px;
         }
         
         .banner-desc .left h3 {
@@ -63,6 +69,8 @@ const FooterBanner = ({ footerBanner }) => {
         }
         
         .banner-desc .right {
+          flex: 1;
+          max-width: 300px;
           line-height: 1.4;
         }
         
@@ -91,11 +99,24 @@ const FooterBanner = ({ footerBanner }) => {
           position: absolute;
           top: -25%;
           left: 25%;
+          z-index: 1;
         }
         
         .footer-banner-image {
           width: 450px;
           height: 450px;
+        }
+        
+        @media screen and (max-width: 1100px) {
+          .banner-desc .left h3,
+          .banner-desc .right h3 {
+            font-size: 60px;
+          }
+          
+          .footer-banner-image {
+            width: 350px;
+            height: 350px;
+          }
         }
         
         @media screen and (max-width: 768px) {
@@ -108,6 +129,12 @@ const FooterBanner = ({ footerBanner }) => {
           .banner-desc {
             flex-direction: column;
             text-align: center;
+          }
+          
+          .banner-desc .left,
+          .banner-desc .right {
+            max-width: 100%;
+            margin: 0 auto;
           }
           
           .banner-desc .left h3,

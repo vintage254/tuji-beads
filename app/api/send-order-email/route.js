@@ -63,13 +63,24 @@ export async function POST(request) {
       price: item.price
     }));
 
+    // Log environment variables (without exposing sensitive data)
+    console.log('Email configuration:', { 
+      emailUser: process.env.EMAIL_USER ? 'Set' : 'Not set',
+      emailPassword: process.env.EMAIL_PASSWORD ? 'Set' : 'Not set'
+    });
+    
     // Create email transporter
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
         user: process.env.EMAIL_USER,
         pass: process.env.EMAIL_PASSWORD
-      }
+      },
+      // Add these settings to improve reliability
+      tls: {
+        rejectUnauthorized: false
+      },
+      debug: process.env.NODE_ENV === 'development'
     });
 
     // Create email content
@@ -97,7 +108,14 @@ export async function POST(request) {
     };
 
     // Send email
-    await transporter.sendMail(emailContent);
+    try {
+      console.log('Sending notification email to admin...');
+      const adminEmailResult = await transporter.sendMail(emailContent);
+      console.log('Admin email sent successfully:', adminEmailResult.messageId);
+    } catch (adminEmailError) {
+      console.error('Failed to send admin notification email:', adminEmailError);
+      // Continue to customer email even if admin email fails
+    }
     
     // Also send a confirmation email to the customer
     const customerEmailContent = {
@@ -127,7 +145,18 @@ export async function POST(request) {
     };
     
     // Send customer confirmation email
-    await transporter.sendMail(customerEmailContent);
+    try {
+      console.log('Sending confirmation email to customer:', user.email);
+      const customerEmailResult = await transporter.sendMail(customerEmailContent);
+      console.log('Customer email sent successfully:', customerEmailResult.messageId);
+    } catch (customerEmailError) {
+      console.error('Failed to send customer confirmation email:', customerEmailError);
+      // Return partial success if at least admin email was sent
+      return NextResponse.json({ 
+        success: true, 
+        warning: 'Failed to send customer confirmation email' 
+      });
+    }
 
     return NextResponse.json({ success: true });
   } catch (error) {

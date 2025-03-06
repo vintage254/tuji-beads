@@ -127,12 +127,21 @@ const Navbar = () => {
           </div>
         )}
         
-        {/* Mobile Cart Icon - only show on mobile when menu is closed */}
+        {/* Mobile Cart Icon and Menu Toggle - only show on mobile when menu is closed */}
         {isMobile && !mobileMenuOpen && (
-          <button type="button" className="cart-icon" onClick={() => setShowCart(true)}>
-            <AiOutlineShopping />
-            <span className="cart-item-qty">{totalQuantities || 0}</span>
-          </button>
+          <div className="mobile-nav-controls">
+            <button type="button" className="cart-icon" onClick={() => setShowCart(true)}>
+              <AiOutlineShopping />
+              <span className="cart-item-qty">{totalQuantities || 0}</span>
+            </button>
+            <button 
+              onClick={toggleMobileMenu} 
+              aria-label="Toggle menu" 
+              className="mobile-menu-btn"
+            >
+              <AiOutlineMenu size={24} />
+            </button>
+          </div>
         )}
         
         {/* Mobile Navigation Menu */}
