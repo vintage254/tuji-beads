@@ -51,11 +51,21 @@ const Navbar = () => {
   
   const toggleMobileMenu = () => {
     console.log('Toggling mobile menu, current state:', mobileMenuOpen);
+    console.log('Mobile menu element:', document.querySelector('.mobile-nav'));
     setMobileMenuOpen(!mobileMenuOpen);
     // Prevent body scrolling when menu is open
     if (typeof document !== 'undefined') {
       document.body.style.overflow = !mobileMenuOpen ? 'hidden' : '';
       console.log('Mobile menu toggled, new state:', !mobileMenuOpen);
+      
+      // Force a repaint to ensure the menu is visible
+      setTimeout(() => {
+        const mobileNav = document.querySelector('.mobile-nav');
+        if (mobileNav) {
+          console.log('Mobile nav after toggle:', mobileNav.className);
+          console.log('Mobile nav style:', mobileNav.style.transform);
+        }
+      }, 100);
     }
   };
   
@@ -70,18 +80,56 @@ const Navbar = () => {
         
         {/* Mobile menu toggle button - only show on mobile */}
         {isMobile && (
-          <div className="mobile-menu-toggle">
+          <div className="mobile-menu-toggle" style={{ 
+            position: 'absolute', 
+            right: '70px', 
+            top: '50%', 
+            transform: 'translateY(-50%)',
+            zIndex: 1001,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center'
+          }}>
             <button 
               onClick={toggleMobileMenu} 
               aria-label="Toggle menu" 
               className="hamburger-button"
-              style={{ zIndex: 1001 }}
+              style={{ 
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between',
+                width: '24px',
+                height: '18px',
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
+                zIndex: 1001
+              }}
             >
-              <div className={`hamburger-icon ${mobileMenuOpen ? 'open' : ''}`}>
-                <span className="hamburger-line"></span>
-                <span className="hamburger-line"></span>
-                <span className="hamburger-line"></span>
-              </div>
+              <span style={{
+                display: 'block',
+                width: '24px',
+                height: '3px',
+                backgroundColor: '#333',
+                marginBottom: '5px',
+                borderRadius: '2px'
+              }}></span>
+              <span style={{
+                display: 'block',
+                width: '24px',
+                height: '3px',
+                backgroundColor: '#333',
+                marginBottom: '5px',
+                borderRadius: '2px'
+              }}></span>
+              <span style={{
+                display: 'block',
+                width: '24px',
+                height: '3px',
+                backgroundColor: '#333',
+                borderRadius: '2px'
+              }}></span>
             </button>
           </div>
         )}
@@ -148,52 +196,193 @@ const Navbar = () => {
         )}
         
         {/* Mobile Navigation Menu */}
-        <div className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`} style={{ zIndex: 1000 }}>
-          <div className="mobile-nav-content">
-            <div className="mobile-nav-header">
+        <div 
+          className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`} 
+          style={{ 
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100vh',
+            backgroundColor: 'rgba(255, 255, 255, 0.98)',
+            zIndex: 1000,
+            transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
+            transition: 'transform 0.3s ease-in-out',
+            display: 'flex',
+            flexDirection: 'column',
+            padding: '20px',
+            boxShadow: mobileMenuOpen ? '0 0 10px rgba(0,0,0,0.1)' : 'none',
+            overflow: 'auto'
+          }}
+        >
+          <div className="mobile-nav-content" style={{ width: '100%' }}>
+            <div className="mobile-nav-header" style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'center',
+              marginBottom: '30px'
+            }}>
               <div className="mobile-logo">
                 <Image src="/logo.png" alt="Beads Charm Logo" width={100} height={50} quality={100} />
               </div>
-              <button onClick={toggleMobileMenu} aria-label="Close menu" className="mobile-close-btn">
+              <button 
+                onClick={toggleMobileMenu} 
+                aria-label="Close menu" 
+                className="mobile-close-btn"
+                style={{
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  fontSize: '24px'
+                }}
+              >
                 <AiOutlineClose size={24} />
               </button>
             </div>
-            <div className="mobile-nav-links">
-              <Link href="/" onClick={() => setMobileMenuOpen(false)}>Home</Link>
-              <Link href="/products" onClick={() => setMobileMenuOpen(false)}>Products</Link>
-              <Link href="/about" onClick={() => setMobileMenuOpen(false)}>About Us</Link>
+            <div className="mobile-nav-links" style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '15px'
+            }}>
+              <Link 
+                href="/" 
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  fontSize: '18px',
+                  color: '#333',
+                  textDecoration: 'none',
+                  padding: '10px 0',
+                  borderBottom: '1px solid #eee'
+                }}
+              >
+                Home
+              </Link>
+              <Link 
+                href="/products" 
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  fontSize: '18px',
+                  color: '#333',
+                  textDecoration: 'none',
+                  padding: '10px 0',
+                  borderBottom: '1px solid #eee'
+                }}
+              >
+                Products
+              </Link>
+              <Link 
+                href="/about" 
+                onClick={() => setMobileMenuOpen(false)}
+                style={{
+                  fontSize: '18px',
+                  color: '#333',
+                  textDecoration: 'none',
+                  padding: '10px 0',
+                  borderBottom: '1px solid #eee'
+                }}
+              >
+                About Us
+              </Link>
               {user && (
-                <Link href="/order-history" onClick={() => setMobileMenuOpen(false)}>Order History</Link>
+                <Link 
+                  href="/order-history" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    fontSize: '18px',
+                    color: '#333',
+                    textDecoration: 'none',
+                    padding: '10px 0',
+                    borderBottom: '1px solid #eee'
+                  }}
+                >
+                  Order History
+                </Link>
               )}
               
-              <div className="mobile-nav-buttons">
+              <div className="mobile-nav-buttons" style={{
+                marginTop: '30px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '15px'
+              }}>
                 {user ? (
                   <>
-                    <div className="user-menu-mobile">
+                    <div className="user-menu-mobile" style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      fontSize: '16px',
+                      color: '#333'
+                    }}>
                       <span className="user-name-mobile">
                         <AiOutlineUser />
-                        <span>{user.name || user.email}</span>
+                        <span style={{ marginLeft: '5px' }}>{user.name || user.email}</span>
                       </span>
                     </div>
-                    <button type="button" className="logout-button-mobile" onClick={() => {
-                      logout();
-                      router.push('/');
-                      setMobileMenuOpen(false);
-                    }}>
+                    <button 
+                      type="button" 
+                      className="logout-button-mobile"
+                      onClick={() => {
+                        logout();
+                        router.push('/');
+                        setMobileMenuOpen(false);
+                      }}
+                      style={{
+                        display: 'flex',
+                        alignItems: 'center',
+                        gap: '10px',
+                        background: 'none',
+                        border: 'none',
+                        fontSize: '16px',
+                        color: '#333',
+                        cursor: 'pointer',
+                        padding: '10px 0'
+                      }}
+                    >
                       <AiOutlineLogout />
                       <span>Logout</span>
                     </button>
                   </>
                 ) : (
-                  <button type="button" className="auth-button-mobile" onClick={handleSignIn}>
+                  <button 
+                    type="button" 
+                    className="auth-button-mobile"
+                    onClick={handleSignIn}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '10px',
+                      background: 'none',
+                      border: 'none',
+                      fontSize: '16px',
+                      color: '#333',
+                      cursor: 'pointer',
+                      padding: '10px 0'
+                    }}
+                  >
                     <AiOutlineUser />
                     <span>Sign In</span>
                   </button>
                 )}
-                <button type="button" className="cart-icon-mobile" onClick={() => {
-                  setShowCart(true);
-                  setMobileMenuOpen(false);
-                }}>
+                <button 
+                  type="button" 
+                  className="cart-icon-mobile"
+                  onClick={() => {
+                    setShowCart(true);
+                    setMobileMenuOpen(false);
+                  }}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '16px',
+                    color: '#333',
+                    cursor: 'pointer',
+                    padding: '10px 0'
+                  }}
+                >
                   <AiOutlineShopping />
                   <span>Cart ({totalQuantities || 0})</span>
                 </button>

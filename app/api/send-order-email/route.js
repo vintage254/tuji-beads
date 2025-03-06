@@ -65,8 +65,8 @@ export async function POST(request) {
 
     // Log environment variables (without exposing sensitive data)
     console.log('Email configuration:', { 
-      emailUser: process.env.EMAIL_USER ? 'Set' : 'Not set',
-      emailPassword: process.env.EMAIL_PASSWORD ? 'Set' : 'Not set'
+      gmailUser: process.env.GMAIL_USER ? 'Set' : 'Not set',
+      gmailAppPassword: process.env.GMAIL_APP_PASSWORD ? 'Set' : 'Not set'
     });
     
     // Log more detailed information about the email configuration
@@ -78,14 +78,14 @@ export async function POST(request) {
     const transporter = nodemailer.createTransport({
       service: 'gmail',
       auth: {
-        user: process.env.EMAIL_USER || 'derricknjuguna414@gmail.com',
-        pass: process.env.EMAIL_PASSWORD
+        user: process.env.GMAIL_USER || 'derricknjuguna414@gmail.com',
+        pass: process.env.GMAIL_APP_PASSWORD
       }
     });
 
     // Create email content
     const emailContent = {
-      from: process.env.EMAIL_USER || 'derricknjuguna414@gmail.com',
+      from: process.env.GMAIL_USER || 'derricknjuguna414@gmail.com',
       to: 'derricknjuguna414@gmail.com',
       subject: `New Order from ${user.name}`,
       html: `
@@ -120,7 +120,7 @@ export async function POST(request) {
     
     // Also send a confirmation email to the customer
     const customerEmailContent = {
-      from: process.env.EMAIL_USER || 'derricknjuguna414@gmail.com',
+      from: process.env.GMAIL_USER || 'derricknjuguna414@gmail.com',
       to: user.email,
       subject: 'Your Order Confirmation - Tuji Beads',
       html: `

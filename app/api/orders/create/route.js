@@ -203,9 +203,8 @@ export async function POST(request) {
     // Try to send email notification
     try {
       // Use absolute URL or relative URL based on environment
-      const emailEndpoint = process.env.NEXT_PUBLIC_BASE_URL 
-        ? `${process.env.NEXT_PUBLIC_BASE_URL}/api/send-order-email`
-        : '/api/send-order-email';
+      const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://tuji-beads.vercel.app';
+      const emailEndpoint = `${baseUrl}/api/send-order-email`;
       
       console.log('Sending email notification to:', emailEndpoint);
       
@@ -228,10 +227,12 @@ export async function POST(request) {
         console.error('Email notification returned non-OK response:', errorText);
         console.error('Email notification status:', emailResponse.status);
       } else {
-        console.log('Email notification sent successfully');
+        const emailResult = await emailResponse.json();
+        console.log('Email notification sent successfully:', emailResult);
       }
     } catch (emailError) {
       console.error('Failed to send email notification:', emailError);
+      console.error('Email error details:', emailError.message);
       // Continue even if email fails
     }
 
