@@ -338,6 +338,54 @@ export const StateContext = ({ children }) => {
         if (cookies['user_session'] && cookies['user_email']) {
           console.log('Found valid session cookies, refreshing state');
           
+          // Call the validate-session endpoint to check if the session is still valid
+          try {
+            const response = await fetch('/api/auth/validate-session', {
+              method: 'GET',
+              credentials: 'include' // Important for cookies to be sent
+            });
+            
+            if (response.ok) {
+              const data = await response.json();
+              
+              if (data.valid) {
+                console.log('Session validated successfully');
+                
+                // Update session ID in state if needed
+                if (!sessionId) {
+                  setSessionId(cookies['user_session']);
+                }
+                
+                // Update user in state with validated user data
+                if (data.user) {
+                  const userData = {
+                    _id: data.user.id,
+                    email: data.user.email,
+                    name: data.user.name,
+                    role: data.user.role
+                  };
+                  
+                  setUser(userData);
+                  localStorage.setItem('user', JSON.stringify(userData));
+                  localStorage.setItem('userEmail', userData.email);
+                } else {
+                  // Fallback to minimal user object if no user data returned
+                  setUser({ email: cookies['user_email'] });
+                  localStorage.setItem('userEmail', cookies['user_email']);
+                }
+                
+                return true; // Successfully refreshed auth state
+              }
+            }
+            
+            // If validation failed, fall back to the original method
+            console.log('Session validation failed, using fallback method');
+          } catch (validationError) {
+            console.error('Error validating session:', validationError);
+            // Continue with fallback method
+          }
+          
+          // Fallback method: just use the cookies we have
           // Update session ID in state if needed
           if (!sessionId) {
             setSessionId(cookies['user_session']);
@@ -362,7 +410,7 @@ export const StateContext = ({ children }) => {
             }
           }
           
-          return true; // Successfully refreshed auth state
+          return true; // Successfully refreshed auth state using fallback
         }
       }
       

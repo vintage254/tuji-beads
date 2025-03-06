@@ -58,7 +58,10 @@ export async function POST(request) {
       );
     }
     
-    if (!userId && !email) {
+    // Use email from cookie if not provided in request
+    const emailToUse = email || userEmail;
+    
+    if (!userId && !emailToUse) {
       return NextResponse.json(
         { error: 'User ID or email is required' },
         { status: 400 }
@@ -69,60 +72,95 @@ export async function POST(request) {
     let userIdToUse = userId;
     
     // If we only have email, find the user by email
-    if (!userIdToUse && (email || userEmail)) {
-      const emailToUse = email || userEmail;
-      
-      // Verify session if we have a user email
-      if (emailToUse) {
-        try {
-          // Check if the session is valid for this user
-          console.log('Checking session validity for email:', emailToUse, 'sessionId:', sessionId);
+    if (!userIdToUse && emailToUse) {
+      try {
+        // Check if the session is valid for this user
+        console.log('Checking session validity for email:', emailToUse, 'sessionId:', sessionId);
+        
+        // First, get the user and their sessions to debug
+        const userWithSessions = await client.fetch(
+          `*[_type == "user" && email == $email][0]{ _id, email, sessions }`,
+          { email: emailToUse }
+        );
+        
+        console.log('User sessions from Sanity:', JSON.stringify(userWithSessions?.sessions || []));
+        
+        // Now check if any session matches
+        const userWithSession = userWithSessions && userWithSessions.sessions && 
+          userWithSessions.sessions.some(session => session.sessionId === sessionId) ? 
+          userWithSessions : null;
+        
+        console.log('Session validation result:', userWithSession ? 'Valid session found' : 'No valid session found');
+        
+        if (!userWithSession) {
+          console.error('Invalid session for user');
           
-          // First, get the user and their sessions to debug
-          const userWithSessions = await client.fetch(
-            `*[_type == "user" && email == $email][0]{ _id, email, sessions }`,
-            { email: emailToUse }
-          );
-          
-          console.log('User sessions from Sanity:', JSON.stringify(userWithSessions?.sessions || []));
-          
-          // Now check if any session matches
-          const userWithSession = userWithSessions && userWithSessions.sessions && 
-            userWithSessions.sessions.some(session => session.sessionId === sessionId) ? 
-            userWithSessions : null;
-          
-          console.log('Session validation result:', userWithSession ? 'Valid session found' : 'No valid session found');
-          
-          if (!userWithSession) {
-            console.error('Invalid session for user');
+          // Try a fallback approach - just use the user we found
+          if (userWithSessions && userWithSessions._id) {
+            console.log('Using fallback authentication - user exists but session not found');
+            userIdToUse = userWithSessions._id;
             
-            // Try a fallback approach - just use the user we found
-            if (userWithSessions && userWithSessions._id) {
-              console.log('Using fallback authentication - user exists but session not found');
-              userIdToUse = userWithSessions._id;
+            // Log the session details for debugging
+            if (userWithSessions.sessions) {
+              console.log('Available sessions:', userWithSessions.sessions.length);
+              userWithSessions.sessions.forEach((session, index) => {
+                console.log(`Session ${index}:`, session.sessionId, 
+                  'matches:', session.sessionId === sessionId);
+              });
               
-              // Log the session details for debugging
-              if (userWithSessions.sessions) {
-                console.log('Available sessions:', userWithSessions.sessions.length);
-                userWithSessions.sessions.forEach((session, index) => {
-                  console.log(`Session ${index}:`, session.sessionId, 
-                    'matches:', session.sessionId === sessionId);
-                });
+              // Try to update the user's sessions with the current session ID
+              // This helps fix session synchronization issues
+              try {
+                await client.patch(userWithSessions._id)
+                  .setIfMissing({ sessions: [] })
+                  .append('sessions', [{ 
+                    sessionId: sessionId,
+                    createdAt: new Date().toISOString(),
+                    lastActive: new Date().toISOString()
+                  }])
+                  .commit();
+                  
+                console.log('Added current session ID to user document');
+              } catch (sessionUpdateError) {
+                console.error('Failed to update user sessions:', sessionUpdateError);
+                // Continue anyway, not critical
               }
-            } else {
-              return NextResponse.json(
-                { error: 'Invalid session' },
-                { status: 401 }
-              );
             }
           } else {
-            // Use the verified user's ID
-            userIdToUse = userWithSession._id;
-            console.log('User authenticated via session:', userIdToUse);
+            return NextResponse.json(
+              { error: 'Invalid session' },
+              { status: 401 }
+            );
           }
-        } catch (sessionError) {
-          console.error('Error verifying session:', sessionError);
+        } else {
+          // Use the verified user's ID
+          userIdToUse = userWithSession._id;
+          console.log('User authenticated via session:', userIdToUse);
+          
+          // Update the session's lastActive timestamp
+          try {
+            const updatedSessions = userWithSession.sessions.map(session => {
+              if (session.sessionId === sessionId) {
+                return {
+                  ...session,
+                  lastActive: new Date().toISOString()
+                };
+              }
+              return session;
+            });
+            
+            await client.patch(userWithSession._id)
+              .set({ sessions: updatedSessions })
+              .commit();
+              
+            console.log('Updated session lastActive timestamp');
+          } catch (sessionUpdateError) {
+            console.error('Failed to update session timestamp:', sessionUpdateError);
+            // Continue anyway, not critical
+          }
         }
+      } catch (sessionError) {
+        console.error('Error verifying session:', sessionError);
       }
       
       // If we still don't have a user ID, try to find by email

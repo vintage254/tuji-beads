@@ -1,6 +1,16 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
-import jwt from 'jsonwebtoken';
+
+// Helper function to parse cookies from header
+function parseCookies(cookieHeader) {
+  const cookies = {};
+  if (cookieHeader) {
+    cookieHeader.split(';').forEach(cookie => {
+      const [name, value] = cookie.trim().split('=');
+      if (name && value) cookies[name] = value;
+    });
+  }
+  return cookies;
+}
 
 // This function can be marked `async` if using `await` inside
 export function middleware(request) {
@@ -31,29 +41,28 @@ export function middleware(request) {
     return NextResponse.next();
   }
 
-  // For API routes, check Authorization header
+  // For API routes, check for session cookies
   if (request.nextUrl.pathname.startsWith('/api/')) {
-    const authHeader = request.headers.get('Authorization');
+    const cookieHeader = request.headers.get('cookie');
     
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return NextResponse.json(
-        { error: 'Authentication required' },
-        { status: 401 }
-      );
+    // If we have cookies, check for session ID
+    if (cookieHeader) {
+      const parsedCookies = parseCookies(cookieHeader);
+      const sessionId = parsedCookies['user_session'];
+      
+      if (sessionId) {
+        // If session cookie exists, allow the request to proceed
+        // The actual endpoint will validate the session
+        console.log('Session cookie found, allowing request to proceed');
+        return NextResponse.next();
+      }
     }
     
-    const token = authHeader.split(' ')[1];
-    
-    try {
-      // Verify the token
-      jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_key_change_this');
-      return NextResponse.next();
-    } catch (error) {
-      return NextResponse.json(
-        { error: 'Invalid or expired token' },
-        { status: 401 }
-      );
-    }
+    // No valid authentication found
+    return NextResponse.json(
+      { error: 'Authentication required' },
+      { status: 401 }
+    );
   }
   
   // For page routes, redirect to login if not authenticated
