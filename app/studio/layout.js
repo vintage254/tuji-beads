@@ -1,5 +1,3 @@
-'use client';
-
 export const metadata = {
   title: 'Tuji Beads Studio',
   description: 'Content management for Tuji Beads',
