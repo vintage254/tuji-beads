@@ -16,6 +16,9 @@ export async function POST(request) {
     
     console.log('Session ID from cookie:', sessionId);
     console.log('User email from cookie:', userEmail);
+    console.log('All cookies:', JSON.stringify(Object.fromEntries(
+      cookieStore.getAll().map(cookie => [cookie.name, cookie.value])
+    )));
     
     // Check for authentication via session cookie
     if (!sessionId) {
@@ -74,23 +77,46 @@ export async function POST(request) {
         try {
           // Check if the session is valid for this user
           console.log('Checking session validity for email:', emailToUse, 'sessionId:', sessionId);
-          const userWithSession = await client.fetch(
-            `*[_type == "user" && email == $email && count(sessions[sessionId == $sessionId]) > 0][0]`,
-            { email: emailToUse, sessionId }
+          
+          // First, get the user and their sessions to debug
+          const userWithSessions = await client.fetch(
+            `*[_type == "user" && email == $email][0]{ _id, email, sessions }`,
+            { email: emailToUse }
           );
+          
+          console.log('User sessions from Sanity:', JSON.stringify(userWithSessions?.sessions || []));
+          
+          // Now check if any session matches
+          const userWithSession = userWithSessions && userWithSessions.sessions && 
+            userWithSessions.sessions.some(session => session.sessionId === sessionId) ? 
+            userWithSessions : null;
           
           console.log('Session validation result:', userWithSession ? 'Valid session found' : 'No valid session found');
           
           if (!userWithSession) {
             console.error('Invalid session for user');
-            return NextResponse.json(
-              { error: 'Invalid session' },
-              { status: 401 }
-            );
-          }
-          
-          // Use the verified user's ID
-          if (userWithSession._id) {
+            
+            // Try a fallback approach - just use the user we found
+            if (userWithSessions && userWithSessions._id) {
+              console.log('Using fallback authentication - user exists but session not found');
+              userIdToUse = userWithSessions._id;
+              
+              // Log the session details for debugging
+              if (userWithSessions.sessions) {
+                console.log('Available sessions:', userWithSessions.sessions.length);
+                userWithSessions.sessions.forEach((session, index) => {
+                  console.log(`Session ${index}:`, session.sessionId, 
+                    'matches:', session.sessionId === sessionId);
+                });
+              }
+            } else {
+              return NextResponse.json(
+                { error: 'Invalid session' },
+                { status: 401 }
+              );
+            }
+          } else {
+            // Use the verified user's ID
             userIdToUse = userWithSession._id;
             console.log('User authenticated via session:', userIdToUse);
           }

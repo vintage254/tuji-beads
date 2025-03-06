@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { isAuthenticated, verifyToken } from '../../../../lib/auth';
+import { client } from '../../../../lib/client';
+import { cookies } from 'next/headers';
 
 // Using Edge Runtime since we've updated auth to use jose
 export const runtime = 'edge';
@@ -56,16 +58,34 @@ export async function GET(request) {
     
     // Try to get token from cookies
     const cookieHeader = request.headers.get('cookie');
+    let cookieObj = {};
+    
     if (cookieHeader) {
-      const cookies = {};
       cookieHeader.split(';').forEach(cookie => {
         const [name, value] = cookie.trim().split('=');
-        if (name && value) cookies[name] = value;
+        if (name && value) cookieObj[name] = value;
       });
       
-      if (cookies['auth_token']) {
+      console.log('All cookies from request:', Object.keys(cookieObj));
+      
+      // Check for user_session cookie (new session system)
+      if (cookieObj['user_session']) {
+        console.log('Found user_session cookie:', cookieObj['user_session']);
+        tokenVerificationResult.sessionCookie = {
+          present: true,
+          value: cookieObj['user_session']
+        };
+      }
+      
+      // Check for user_email cookie
+      if (cookieObj['user_email']) {
+        console.log('Found user_email cookie:', cookieObj['user_email']);
+        tokenVerificationResult.userEmail = cookieObj['user_email'];
+      }
+      
+      if (cookieObj['auth_token']) {
         try {
-          const cookieTokenPayload = await verifyToken(cookies['auth_token']);
+          const cookieTokenPayload = await verifyToken(cookieObj['auth_token']);
           tokenVerificationResult.cookieToken = {
             valid: !!cookieTokenPayload,
             payload: cookieTokenPayload ? {
@@ -93,6 +113,43 @@ export async function GET(request) {
       tokenVerificationResult.authenticatedUser = {
         userId: authUser.userId,
         role: authUser.role
+      };
+    }
+    
+    // Check for session validation using the new session system
+    try {
+      const cookieStore = cookies();
+      const sessionId = cookieStore.get('user_session')?.value;
+      const userEmail = cookieStore.get('user_email')?.value;
+      
+      console.log('Checking session from cookies:', { sessionId, userEmail });
+      
+      if (sessionId && userEmail) {
+        // Get user and their sessions for debugging
+        const userWithSessions = await client.fetch(
+          `*[_type == "user" && email == $email][0]{ _id, email, sessions }`,
+          { email: userEmail }
+        );
+        
+        console.log('User sessions from Sanity:', JSON.stringify(userWithSessions?.sessions || []));
+        
+        // Check if any session matches
+        const sessionValid = userWithSessions && userWithSessions.sessions && 
+          userWithSessions.sessions.some(session => session.sessionId === sessionId);
+        
+        tokenVerificationResult.sessionValidation = {
+          sessionId,
+          userEmail,
+          userFound: !!userWithSessions,
+          sessionsCount: userWithSessions?.sessions?.length || 0,
+          sessionValid,
+          sessions: userWithSessions?.sessions || []
+        };
+      }
+    } catch (sessionError) {
+      console.error('Session validation error:', sessionError);
+      tokenVerificationResult.sessionValidation = {
+        error: sessionError.message
       };
     }
     
