@@ -24,7 +24,15 @@ export const StateContext = ({ children }) => {
     }, {});
   };
 
-  // parseCookies function is used by other methods
+  // Set a cookie with configurable expiration
+  const setCookie = (name, value, days = 30) => {
+    if (typeof document === 'undefined') return;
+    
+    const date = new Date();
+    date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+    const expires = `expires=${date.toUTCString()}`;
+    document.cookie = `${name}=${value};${expires};path=/;SameSite=Lax`;
+  };
 
   // Attempt to restore session from cookies
   const restoreSession = async () => {
@@ -39,7 +47,12 @@ export const StateContext = ({ children }) => {
           // Try to validate session with the server
           const response = await fetch('/api/auth/validate-session', {
             method: 'GET',
-            credentials: 'include'
+            credentials: 'include',
+            headers: {
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0'
+            }
           });
           
           if (response.ok) {
@@ -48,6 +61,11 @@ export const StateContext = ({ children }) => {
               setUser(data.user);
               localStorage.setItem('user', JSON.stringify(data.user));
               localStorage.setItem('userEmail', data.user.email);
+              
+              // Refresh the cookies to extend their lifetime
+              setCookie('user_session', sessionId);
+              setCookie('user_email', data.user.email);
+              
               return true;
             }
           }
@@ -55,6 +73,10 @@ export const StateContext = ({ children }) => {
           // If server validation fails, at least create a minimal user object
           setUser({ email: emailFromCookie });
           localStorage.setItem('userEmail', emailFromCookie);
+          
+          // Refresh the cookies to extend their lifetime
+          setCookie('user_session', sessionId);
+          setCookie('user_email', emailFromCookie);
         }
         return true;
       }
@@ -169,7 +191,10 @@ export const StateContext = ({ children }) => {
       // Store session ID
       if (data.sessionId) {
         setSessionId(data.sessionId);
-        console.log('Session established');
+        // Manually set cookies with longer expiration (30 days)
+        setCookie('user_session', data.sessionId);
+        setCookie('user_email', data.user.email);
+        console.log('Session established with extended expiration');
       } else {
         console.log('No session ID received from login response');
       }
@@ -307,37 +332,44 @@ export const StateContext = ({ children }) => {
     toast.success('Logged out successfully');
   };
 
-  // Check if user is authenticated with valid session
-  const checkUserAuthentication = () => {
-    // Check for user and valid session
-    const hasUser = !!user;
+  // Check if user is authenticated
+  const isAuthenticated = () => {
+    // First check if we have a user in state
+    if (user) return true;
     
-    // Properly parse cookies
-    let hasSessionCookie = false;
-    if (typeof window !== 'undefined') {
-      const cookies = document.cookie.split(';').reduce((acc, cookie) => {
-        const [key, value] = cookie.trim().split('=');
-        if (key && value) acc[key] = value;
-        return acc;
-      }, {});
-      
-      hasSessionCookie = !!cookies['user_session'];
+    // Then check if we have a session cookie
+    const cookies = parseCookies();
+    if (cookies['user_session'] && cookies['user_email']) {
+      // If we have cookies but no user state, try to restore the session
+      if (typeof window !== 'undefined') {
+        // Create a minimal user object from the email cookie
+        const email = cookies['user_email'];
+        setUser({ email });
+        localStorage.setItem('userEmail', email);
+        
+        // Trigger a full session restore in the background
+        restoreSession().then(success => {
+          console.log('Background session restore:', success ? 'successful' : 'failed');
+        });
+      }
+      return true;
     }
     
-    const hasSessionState = !!sessionId;
+    // Finally check localStorage
+    if (typeof window !== 'undefined') {
+      const storedUser = localStorage.getItem('user');
+      const storedEmail = localStorage.getItem('userEmail');
+      
+      if (storedUser || storedEmail) {
+        // If we have local storage data but no cookies, try to restore the session
+        restoreSession().then(success => {
+          console.log('Background session restore from localStorage:', success ? 'successful' : 'failed');
+        });
+        return true;
+      }
+    }
     
-    // Check if we have both user info and a session
-    const isAuth = hasUser && (hasSessionState || hasSessionCookie);
-    
-    console.log('Authentication check:', { 
-      hasUser, 
-      hasSessionCookie, 
-      hasSessionState, 
-      userEmail: user?.email || localStorage.getItem('userEmail'),
-      isAuth 
-    });
-    
-    return isAuth;
+    return false;
   };
 
   const authenticatedFetch = async (url, options = {}) => {
@@ -616,7 +648,7 @@ export const StateContext = ({ children }) => {
         login,
         register,
         logout,
-        isAuthenticated: checkUserAuthentication,
+        isAuthenticated: isAuthenticated,
         authenticatedFetch,
         sessionId
       }}

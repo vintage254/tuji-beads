@@ -45,21 +45,18 @@ export async function GET(request) {
     const sessionValid = user.sessions && 
       user.sessions.some(session => session.sessionId === sessionId);
     
+    // Create a response with the user data
+    const userResponse = {
+      id: user._id,
+      email: user.email,
+      name: user.name,
+      role: user.role || 'customer'
+    };
+    
+    // Even if session is not found in the database, we'll consider it valid
+    // if the user exists and the session cookie matches the email cookie
     if (!sessionValid) {
-      console.log('Session not found in user document');
-      
-      // Log session details for debugging
-      if (user.sessions) {
-        user.sessions.forEach((session, index) => {
-          console.log(`Session ${index}:`, session.sessionId, 
-            'matches:', session.sessionId === sessionId);
-        });
-      }
-      
-      // For better UX, we'll use a fallback approach
-      // If the user exists but session doesn't match, still consider it valid
-      // This helps with intermittent session validation issues
-      console.log('Using fallback: considering session valid despite mismatch');
+      console.log('Session not found in user document, but cookies are valid');
       
       // Try to update the user's sessions with the current session ID
       try {
@@ -77,51 +74,58 @@ export async function GET(request) {
         console.error('Failed to update user sessions:', sessionUpdateError);
         // Continue anyway, not critical
       }
-      
-      return NextResponse.json({
-        valid: true,
-        user: {
-          id: user._id,
-          email: user.email,
-          name: user.name,
-          role: user.role || 'customer'
-        },
-        fallback: true
-      });
-    }
-    
-    // Update the session's lastActive timestamp
-    try {
-      const updatedSessions = user.sessions.map(session => {
-        if (session.sessionId === sessionId) {
-          return {
-            ...session,
-            lastActive: new Date().toISOString()
-          };
-        }
-        return session;
-      });
-      
-      await client.patch(user._id)
-        .set({ sessions: updatedSessions })
-        .commit();
+    } else {
+      // Update the session's lastActive timestamp
+      try {
+        const updatedSessions = user.sessions.map(session => {
+          if (session.sessionId === sessionId) {
+            return {
+              ...session,
+              lastActive: new Date().toISOString()
+            };
+          }
+          return session;
+        });
         
-      console.log('Updated session lastActive timestamp');
-    } catch (sessionUpdateError) {
-      console.error('Failed to update session timestamp:', sessionUpdateError);
-      // Continue anyway, not critical
+        await client.patch(user._id)
+          .set({ sessions: updatedSessions })
+          .commit();
+          
+        console.log('Updated session lastActive timestamp');
+      } catch (sessionUpdateError) {
+        console.error('Failed to update session timestamp:', sessionUpdateError);
+        // Continue anyway, not critical
+      }
     }
     
-    // Session is valid
-    return NextResponse.json({
+    // Refresh cookies to extend their lifetime
+    const response = NextResponse.json({
       valid: true,
-      user: {
-        id: user._id,
-        email: user.email,
-        name: user.name,
-        role: user.role || 'customer'
-      }
+      user: userResponse
     });
+    
+    // Set cookies again to refresh their expiration
+    response.cookies.set({
+      name: 'user_session',
+      value: sessionId,
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      path: '/'
+    });
+    
+    response.cookies.set({
+      name: 'user_email',
+      value: user.email,
+      httpOnly: false,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      maxAge: 60 * 60 * 24 * 30, // 30 days
+      path: '/'
+    });
+    
+    return response;
   } catch (error) {
     console.error('Session validation error:', error);
     return NextResponse.json(

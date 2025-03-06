@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import dynamicImport from 'next/dynamic';
 import { useStateContext } from '../../context/StateContext';
 import { FiRefreshCw } from 'react-icons/fi';
+import ClientLayout from '../../components/ClientLayout';
 
 // Import the fallback component
 const OrderHistoryFallback = dynamicImport(() => import('../../components/OrderHistoryFallback'), {
@@ -14,10 +15,11 @@ const OrderHistoryFallback = dynamicImport(() => import('../../components/OrderH
 
 // Force dynamic rendering to prevent static generation issues
 export const dynamic = 'force-dynamic';
-export const runtime = 'edge';
+// Remove edge runtime to avoid issues with client components
+// export const runtime = 'edge';
 
-// Simple client-only component
-export default function OrderHistoryPage() {
+// Client-only component wrapper
+function OrderHistoryClient() {
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [orders, setOrders] = useState([]);
@@ -338,5 +340,14 @@ export default function OrderHistoryPage() {
         </div>
       ))}
     </div>
+  );
+}
+
+// Default export that doesn't directly use StateContext
+export default function OrderHistoryPage() {
+  return (
+    <ClientLayout>
+      <OrderHistoryClient />
+    </ClientLayout>
   );
 }
