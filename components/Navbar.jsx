@@ -250,52 +250,39 @@ const Navbar = () => {
             alignItems: 'center',
             gap: '10px'
           }}>
-            {/* Theme Toggle Button for Mobile */}
+            {/* Cart Icon for Mobile */}
             <button 
               type="button" 
-              className="theme-toggle-button-mobile" 
-              onClick={toggleTheme}
-              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              className="cart-icon-mobile" 
+              onClick={() => setShowCart(true)}
               style={{
                 background: 'none',
                 border: 'none',
                 cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '20px',
-                color: '#333',
-                padding: '5px'
+                position: 'relative'
               }}
             >
-              {theme === 'light' ? <BsMoon /> : <BsSun />}
-            </button>
-            
-            {/* Currency Display/Toggle for Mobile */}
-            <button 
-              type="button" 
-              className="currency-toggle-button-mobile" 
-              onClick={handleCurrencyChange}
-              disabled={isLoadingExchangeRate}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '20px',
-                color: '#333',
-                padding: '5px'
-              }}
-            >
-              <span className="currency-symbol">{currency === 'USD' ? '$' : 'KSh'}</span>
-              {isLoadingExchangeRate && <span className="loading-dot"></span>}
-            </button>
-            
-            <button type="button" className="cart-icon" onClick={() => setShowCart(true)}>
-              <AiOutlineShopping />
-              <span className="cart-item-qty">{totalQuantities || 0}</span>
+              <AiOutlineShopping size={25} />
+              {totalQuantities > 0 && (
+                <span className="cart-item-qty" style={{
+                  position: 'absolute',
+                  top: '-8px',
+                  right: '-8px',
+                  backgroundColor: '#f02d34',
+                  color: 'white',
+                  width: '18px',
+                  height: '18px',
+                  borderRadius: '50%',
+                  textAlign: 'center',
+                  fontSize: '12px',
+                  fontWeight: 'bold',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }}>
+                  {totalQuantities}
+                </span>
+              )}
             </button>
           </div>
         )}
@@ -410,17 +397,66 @@ const Navbar = () => {
                 flexDirection: 'column',
                 gap: '15px'
               }}>
-                {/* Currency Display in Mobile Menu */}
-                <div className="currency-display-mobile" style={{
+                {/* Theme Toggle Button in Mobile Menu */}
+                <div className="theme-toggle-mobile-menu" style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '10px',
-                  fontSize: '16px',
-                  color: '#333',
+                  justifyContent: 'space-between',
                   padding: '10px 0',
                   borderBottom: '1px solid #eee'
                 }}>
-                  <span>Currency: {currency}</span>
+                  <span>Theme</span>
+                  <button 
+                    type="button" 
+                    className="theme-toggle-button-mobile" 
+                    onClick={toggleTheme}
+                    aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '20px',
+                      color: '#333',
+                      padding: '5px'
+                    }}
+                  >
+                    {theme === 'light' ? <BsMoon /> : <BsSun />}
+                  </button>
+                </div>
+                
+                {/* Currency Toggle Button in Mobile Menu */}
+                <div className="currency-toggle-mobile-menu" style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  padding: '10px 0',
+                  borderBottom: '1px solid #eee'
+                }}>
+                  <span>Currency</span>
+                  <button 
+                    type="button" 
+                    className="currency-toggle-button-mobile" 
+                    onClick={handleCurrencyChange}
+                    disabled={isLoadingExchangeRate}
+                    style={{
+                      background: 'none',
+                      border: 'none',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '16px',
+                      color: '#333',
+                      padding: '5px',
+                      position: 'relative'
+                    }}
+                  >
+                    <span className="currency-symbol">{currency === 'USD' ? '$' : 'KSh'}</span>
+                    {isLoadingExchangeRate && <span className="loading-dot"></span>}
+                  </button>
                 </div>
                 
                 {user ? (
