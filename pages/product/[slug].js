@@ -8,7 +8,7 @@ import { useStateContext } from '../../context/StateContext';
 const ProductDetails = ({ product, products }) => {
     const [index, setIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
-    const { decQty, incQty, qty, onAdd, setShowCart } = useStateContext();
+    const { decQty, incQty, qty, onAdd, setShowCart, currency, convertPrice } = useStateContext();
     
     // Handle loading state for fallback pages
     React.useEffect(() => {
@@ -98,7 +98,7 @@ const ProductDetails = ({ product, products }) => {
                     </div>
                     <h4>Details:</h4>
                     <p>{details}</p>
-                    <p className="price">KSH{price}</p>
+                    <p className="price">{currency === 'USD' ? '$' : 'KSh'}{convertPrice(price)}</p>
                     <div className="quantity">
                         <h3>Quantity:</h3>
                         <p className="quantity-desc">

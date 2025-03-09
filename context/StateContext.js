@@ -12,6 +12,11 @@ export const StateContext = ({ children }) => {
   const [qty, setQty] = useState(1);
   const [user, setUser] = useState(null);
   const [sessionId, setSessionId] = useState(null);
+  const [theme, setTheme] = useState('light');
+  const [currency, setCurrency] = useState('KSH');
+  const [exchangeRate, setExchangeRate] = useState(0.0077); // Default fallback rate
+  const [showCurrencyModal, setShowCurrencyModal] = useState(false);
+  const [isLoadingExchangeRate, setIsLoadingExchangeRate] = useState(false);
 
   // Function to parse cookies
   const parseCookies = () => {
@@ -624,13 +629,102 @@ export const StateContext = ({ children }) => {
     });
   };
 
+  // Function to fetch the latest exchange rate
+  const fetchExchangeRate = async (selectedCurrency) => {
+    if (selectedCurrency === 'KSH') {
+      // No need to fetch if using the base currency
+      return;
+    }
+    
+    setIsLoadingExchangeRate(true);
+    try {
+      // Using ExchangeRate-API for real-time rates
+      const response = await fetch(`https://open.er-api.com/v6/latest/KES`);
+      const data = await response.json();
+      
+      if (data && data.rates && data.rates.USD) {
+        setExchangeRate(data.rates.USD);
+        console.log(`Updated exchange rate: 1 KSH = ${data.rates.USD} USD`);
+      } else {
+        // Fallback to default rate if API fails
+        console.warn('Could not get exchange rate from API, using fallback rate');
+      }
+    } catch (error) {
+      console.error('Error fetching exchange rate:', error);
+      toast.error('Could not update currency rates. Using estimated conversion.');
+    } finally {
+      setIsLoadingExchangeRate(false);
+    }
+  };
+
+  // Function to handle currency change
+  const handleCurrencyChange = (newCurrency) => {
+    setCurrency(newCurrency);
+    localStorage.setItem('currency', newCurrency);
+    
+    // Fetch latest exchange rate when currency changes
+    fetchExchangeRate(newCurrency);
+  };
+
+  // Function to convert price based on selected currency
+  // Since prices in database are in KSH, we convert to USD when needed
+  const convertPrice = (priceInKSH) => {
+    if (!priceInKSH) return '0.00';
+    
+    if (isLoadingExchangeRate) {
+      return '...'; // Show loading indicator while fetching rates
+    }
+    
+    if (currency === 'USD') {
+      return (priceInKSH * exchangeRate).toFixed(2);
+    }
+    return priceInKSH.toFixed(2);
+  };
+
+  // Theme toggle function
+  const toggleTheme = () => {
+    const newTheme = theme === 'light' ? 'dark' : 'light';
+    setTheme(newTheme);
+    localStorage.setItem('theme', newTheme);
+    // Apply theme to document
+    if (typeof document !== 'undefined') {
+      document.documentElement.setAttribute('data-theme', newTheme);
+    }
+  };
+
+  // Initialize theme and currency from localStorage and fetch exchange rate
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const storedTheme = localStorage.getItem('theme');
+      const storedCurrency = localStorage.getItem('currency');
+      const currencySelected = localStorage.getItem('currencySelected');
+      
+      if (storedTheme) {
+        setTheme(storedTheme);
+        document.documentElement.setAttribute('data-theme', storedTheme);
+      }
+      
+      if (storedCurrency) {
+        setCurrency(storedCurrency);
+        // Fetch exchange rate for the stored currency
+        fetchExchangeRate(storedCurrency);
+      } else {
+        // Fetch exchange rate for the default currency
+        fetchExchangeRate(currency);
+      }
+      
+      // Show currency modal if user hasn't selected a currency yet
+      if (!currencySelected) {
+        setShowCurrencyModal(true);
+      }
+    }
+  }, []);
+
   return (
     <Context.Provider
       value={{
         showCart,
         setShowCart,
-        showAuth,
-        setShowAuth,
         cartItems,
         totalPrice,
         totalQuantities,
@@ -643,20 +737,32 @@ export const StateContext = ({ children }) => {
         setCartItems,
         setTotalPrice,
         setTotalQuantities,
+        showAuth,
+        setShowAuth,
         user,
         setUser,
         login,
         register,
         logout,
-        isAuthenticated: isAuthenticated,
+        isAuthenticated,
         authenticatedFetch,
-        sessionId
+        sessionId,
+        setSessionId,
+        theme,
+        setTheme,
+        toggleTheme,
+        currency,
+        setCurrency: handleCurrencyChange,
+        convertPrice,
+        showCurrencyModal,
+        setShowCurrencyModal,
+        isLoadingExchangeRate
       }}
     >
       {children}
     </Context.Provider>
-  );
-};
+  )
+}
 
 export default StateContext;
 

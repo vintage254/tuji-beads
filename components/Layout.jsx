@@ -2,10 +2,12 @@
 
 import React from 'react';
 import Head from 'next/head';
+import '../styles/theme-overrides.css';
 
 import Navbar from './Navbar';
 import Footer from './Footer';
 import WhatsAppButton from './WhatsAppButton';
+import CurrencyModal from './CurrencyModal';
 
 const Layout = ({ children }) => {
   return (
@@ -23,6 +25,7 @@ const Layout = ({ children }) => {
         <Footer />
       </footer>
       <WhatsAppButton />
+      <CurrencyModal />
     </div>
   )
 }

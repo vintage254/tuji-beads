@@ -3,8 +3,11 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 import { urlFor } from '../lib/client';
+import { useStateContext } from '../context/StateContext';
 
 const Product = ({ product }) => {
+  const { currency, convertPrice } = useStateContext();
+  
   if (!product) return null; // Return null if product is undefined
   
   const { image, name, slug, price } = product;
@@ -28,7 +31,9 @@ const Product = ({ product }) => {
             <div className="product-image-placeholder">No Image Available</div>
           )}
           <p className="product-name">{name || 'Unnamed Product'}</p>
-          <p className="product-price">KSH{price || 0}</p>
+          <p className="product-price">
+            {currency === 'USD' ? '$' : 'KSh'}{convertPrice(price || 0)}
+          </p>
         </div>
       </Link>
     </div>

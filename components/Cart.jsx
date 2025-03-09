@@ -15,7 +15,21 @@ const Cart = () => {
   const cartRef = React.useRef();
   const router = useRouter();
   const pathname = usePathname();
-  const { totalPrice, totalQuantities, cartItems, setShowCart, toggleCartItemQuantity, onRemove, setCartItems, setTotalPrice, setTotalQuantities, authenticatedFetch, isAuthenticated } = useStateContext();
+  const { 
+    totalPrice, 
+    totalQuantities, 
+    cartItems, 
+    setShowCart, 
+    toggleCartItemQuantity, 
+    onRemove, 
+    setCartItems, 
+    setTotalPrice, 
+    setTotalQuantities, 
+    authenticatedFetch, 
+    isAuthenticated,
+    currency,
+    convertPrice 
+  } = useStateContext();
 
   const { user, setShowAuth } = useStateContext();
   
@@ -230,7 +244,7 @@ const Cart = () => {
               <div className="item-desc">
                 <div className="flex top">
                   <h5>{item.name}</h5>
-                  <h4>KSH {item.price}</h4>
+                  <h4>{currency === 'USD' ? '$' : 'KSh'} {convertPrice(item.price)}</h4>
                 </div>
                 <div className="flex bottom">
                   <div>
@@ -261,7 +275,7 @@ const Cart = () => {
           <div className="cart-bottom">
             <div className="total">
               <h3>Subtotal:</h3>
-              <h3>KSH {totalPrice}</h3>
+              <h3>{currency === 'USD' ? '$' : 'KSh'} {convertPrice(totalPrice)}</h3>
             </div>
             <div className="payment-container">
               <button 

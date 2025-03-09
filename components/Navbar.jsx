@@ -3,13 +3,15 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { AiOutlineShopping, AiOutlineUser, AiOutlineLogout, AiOutlineMenu, AiOutlineClose } from 'react-icons/ai';
+import { AiOutlineShopping, AiOutlineUser, AiOutlineLogout, AiOutlineMenu, AiOutlineClose, AiOutlineLogin } from 'react-icons/ai';
+import { BsSun, BsMoon } from 'react-icons/bs';
+import { FaExchangeAlt } from 'react-icons/fa';
 import { Cart, Authentication } from './';
 import { useStateContext } from '../context/StateContext';
 import { useRouter } from 'next/navigation';
 
 const Navbar = () => {
-  const { showCart, setShowCart, showAuth, setShowAuth, totalQuantities, user, logout } = useStateContext();
+  const { showCart, setShowCart, showAuth, setShowAuth, totalQuantities, user, logout, theme, toggleTheme, currency, setCurrency, isLoadingExchangeRate } = useStateContext();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
@@ -78,6 +80,13 @@ const Navbar = () => {
     }
   };
   
+  // Function to handle currency change
+  const handleCurrencyChange = () => {
+    // Open the currency modal
+    const newCurrency = currency === 'KSH' ? 'USD' : 'KSH';
+    setCurrency(newCurrency);
+  };
+
   return (
     <>
       <div className={`navbar-container ${scrolled ? 'scrolled' : ''}`}>
@@ -160,6 +169,49 @@ const Navbar = () => {
         {/* Desktop Nav Buttons - only show on desktop */}
         {!isMobile && (
           <div className="nav-buttons desktop-nav">
+            {/* Theme Toggle Button */}
+            <button 
+              type="button" 
+              className="theme-toggle-button" 
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                color: '#333',
+                marginRight: '10px'
+              }}
+            >
+              {theme === 'light' ? <BsMoon /> : <BsSun />}
+            </button>
+            
+            {/* Currency Display */}
+            <button 
+              type="button" 
+              className="currency-toggle-button" 
+              onClick={handleCurrencyChange}
+              disabled={isLoadingExchangeRate}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                color: '#333',
+                marginRight: '10px'
+              }}
+            >
+              <span className="currency-symbol">{currency === 'USD' ? '$' : 'KSh'}</span>
+              {isLoadingExchangeRate && <span className="loading-dot"></span>}
+            </button>
+            
             {user ? (
               <div className="user-menu">
                 <span className="user-name">
@@ -198,6 +250,49 @@ const Navbar = () => {
             alignItems: 'center',
             gap: '10px'
           }}>
+            {/* Theme Toggle Button for Mobile */}
+            <button 
+              type="button" 
+              className="theme-toggle-button-mobile" 
+              onClick={toggleTheme}
+              aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                color: '#333',
+                padding: '5px'
+              }}
+            >
+              {theme === 'light' ? <BsMoon /> : <BsSun />}
+            </button>
+            
+            {/* Currency Display/Toggle for Mobile */}
+            <button 
+              type="button" 
+              className="currency-toggle-button-mobile" 
+              onClick={handleCurrencyChange}
+              disabled={isLoadingExchangeRate}
+              style={{
+                background: 'none',
+                border: 'none',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '20px',
+                color: '#333',
+                padding: '5px'
+              }}
+            >
+              <span className="currency-symbol">{currency === 'USD' ? '$' : 'KSh'}</span>
+              {isLoadingExchangeRate && <span className="loading-dot"></span>}
+            </button>
+            
             <button type="button" className="cart-icon" onClick={() => setShowCart(true)}>
               <AiOutlineShopping />
               <span className="cart-item-qty">{totalQuantities || 0}</span>
@@ -315,6 +410,19 @@ const Navbar = () => {
                 flexDirection: 'column',
                 gap: '15px'
               }}>
+                {/* Currency Display in Mobile Menu */}
+                <div className="currency-display-mobile" style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  fontSize: '16px',
+                  color: '#333',
+                  padding: '10px 0',
+                  borderBottom: '1px solid #eee'
+                }}>
+                  <span>Currency: {currency}</span>
+                </div>
+                
                 {user ? (
                   <>
                     <div className="user-menu-mobile" style={{
@@ -468,89 +576,88 @@ const Navbar = () => {
           transform: rotate(-135deg);
         }
         
-        /* Mobile Navigation Styles */
-        .mobile-nav {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100vh;
-          background-color: rgba(255, 255, 255, 0.98);
-          z-index: 999;
-          transform: translateX(-100%);
-          transition: transform 0.3s ease-in-out;
-          overflow-y: auto;
-        }
-        
-        .mobile-nav.open {
-          transform: translateX(0);
-        }
-        
-        .mobile-nav-content {
-          padding: 20px;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-        }
-        
-        .mobile-nav-header {
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-          margin-bottom: 30px;
-        }
-        
-        .mobile-close-btn {
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          color: #333;
-        }
-        
-        .mobile-nav-links {
-          display: flex;
-          flex-direction: column;
-          gap: 20px;
-        }
-        
-        .mobile-nav-links a {
-          font-size: 18px;
-          color: #333;
-          text-decoration: none;
-          padding: 10px 0;
-          border-bottom: 1px solid #eee;
-          transition: color 0.2s;
-        }
-        
-        .mobile-nav-links a:hover {
-          color: #666;
-        }
-        
-        .mobile-nav-buttons {
-          margin-top: 30px;
-          display: flex;
-          flex-direction: column;
-          gap: 15px;
-        }
-        
-        .mobile-nav-buttons button {
+        /* Theme toggle button styles */
+        .theme-toggle-button, .theme-toggle-button-mobile {
           display: flex;
           align-items: center;
-          gap: 10px;
+          justify-content: center;
           background: none;
           border: none;
-          font-size: 16px;
-          color: #333;
           cursor: pointer;
-          padding: 10px 0;
+          color: var(--text-color, #333);
+          transition: color 0.3s ease;
         }
         
-        .user-name-mobile {
+        .theme-toggle-button:hover, .theme-toggle-button-mobile:hover {
+          color: var(--accent-color, #666);
+        }
+        
+        /* Currency display styles */
+        .currency-display {
+          padding: 5px 10px;
+          border-radius: 4px;
+          background-color: var(--light-bg-color, #f5f5f5);
+          color: var(--text-color, #333);
+          font-weight: bold;
+        }
+        
+        /* Currency toggle button styles */
+        .currency-toggle-button, .currency-toggle-button-mobile {
           display: flex;
           align-items: center;
-          gap: 10px;
-          font-size: 16px;
-          color: #333;
+          justify-content: center;
+          background: none;
+          border: none;
+          cursor: pointer;
+          color: var(--text-color, #333);
+          transition: color 0.3s ease;
+        }
+        
+        .currency-toggle-button:hover, .currency-toggle-button-mobile:hover {
+          color: var(--accent-color, #666);
+        }
+        
+        /* Dark theme variables */
+        [data-theme='dark'] {
+          --bg-color: #121212;
+          --text-color: #f5f5f5;
+          --light-bg-color: #2a2a2a;
+          --accent-color: #bb86fc;
+          --border-color: #333;
+        }
+        
+        /* Light theme variables */
+        [data-theme='light'] {
+          --bg-color: #ffffff;
+          --text-color: #333333;
+          --light-bg-color: #f5f5f5;
+          --accent-color: #f02d34;
+          --border-color: #e0e0e0;
+        }
+        
+        /* Apply theme colors */
+        body {
+          background-color: var(--bg-color);
+          color: var(--text-color);
+          transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
+        .navbar-container {
+          background-color: var(--bg-color);
+          border-bottom: 1px solid var(--border-color);
+        }
+        
+        .mobile-nav {
+          background-color: var(--bg-color);
+        }
+        
+        .mobile-nav-links a, .mobile-nav-buttons button {
+          color: var(--text-color);
+          border-bottom: 1px solid var(--border-color);
+        }
+        
+        .hamburger-line {
+          background: var(--text-color);
         }
       `}</style>
     </>
