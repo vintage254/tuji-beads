@@ -14,23 +14,31 @@ body, * {
 /* Theme Variables */
 /* Dark theme variables */
 [data-theme='dark'] {
-  --bg-color: #121212;
+  --bg-color: #0f0f13;
   --text-color: #e0e0e0;
-  --light-bg-color: #1e1e1e;
-  --accent-color: #c2a5fc;
-  --border-color: #333;
-  --card-bg-color: #1a1a1a;
-  --input-bg-color: #2a2a2a;
+  --light-bg-color: #1a1a22;
+  --accent-color: #a374db;
+  --border-color: #2a2a36;
+  --card-bg-color: #16161e;
+  --input-bg-color: #212130;
   --input-text-color: #e0e0e0;
-  --button-bg-color: #9d4edd;
+  --button-bg-color: #8a4edb;
   --button-text-color: #ffffff;
-  --hover-color: #b14aff;
+  --hover-color: #9d5aed;
   --shadow-color: rgba(0, 0, 0, 0.5);
   --secondary-text: #a0a0a0;
-  --card-hover-bg: #252525;
-  --subtle-accent: rgba(157, 78, 221, 0.15);
-  --nav-bg: rgba(18, 18, 18, 0.95);
-  --modal-overlay: rgba(0, 0, 0, 0.7);
+  --card-hover-bg: #1e1e28;
+  --subtle-accent: rgba(138, 78, 219, 0.15);
+  --nav-bg: rgba(15, 15, 19, 0.95);
+  --modal-overlay: rgba(10, 10, 15, 0.8);
+  --success-color: #4ade80;
+  --warning-color: #facc15;
+  --error-color: #f87171;
+  --info-color: #60a5fa;
+  --card-border: 1px solid #2a2a36;
+  --card-radius: 12px;
+  --button-radius: 8px;
+  --highlight-bg: rgba(138, 78, 219, 0.1);
 }
 
 /* Light theme variables */
