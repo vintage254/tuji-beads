@@ -1,6 +1,6 @@
-# Tuji Beads E-Commerce Platform
+# Beads Charm Collection E-Commerce Platform
 
-This is a Next.js e-commerce platform for Tuji Beads, featuring user authentication, product catalog, shopping cart, order management, and email notifications.
+This is a Next.js e-commerce platform for Beads Charm Collection, featuring user authentication, product catalog, shopping cart, order management, and email notifications.
 
 ## Features
 
@@ -49,7 +49,7 @@ This application uses Gmail for sending order notifications. To set it up:
    - Go to your [Google Account](https://myaccount.google.com/)
    - Enable 2-Step Verification if not already enabled
    - Go to Security > App passwords
-   - Generate a new app password for "Mail" and "Other" (name it "Tuji Beads")
+   - Generate a new app password for "Mail" and "Other" (name it "Beads Charm Collection")
 3. Add your Gmail credentials to `.env.local`:
 
 ```

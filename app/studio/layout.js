@@ -1,8 +1,8 @@
 import AdminLogoutButton from '../../components/AdminLogoutButton';
 
 export const metadata = {
-  title: 'Tuji Beads Studio',
-  description: 'Content management for Tuji Beads',
+  title: 'Beads Charm Collection Studio',
+  description: 'Content management for Beads Charm Collection',
 };
 
 export default function StudioLayout({ children }) {

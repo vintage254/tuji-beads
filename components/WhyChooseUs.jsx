@@ -32,7 +32,7 @@ const WhyChooseUs = () => {
   return (
     <div className="why-choose-us">
       <div className="section-heading">
-        <h2>Why Choose Tuji Beads</h2>
+        <h2>Why Choose Beads Charm Collection</h2>
         <p>What makes our beads special</p>
       </div>
       

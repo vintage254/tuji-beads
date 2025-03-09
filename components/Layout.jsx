@@ -13,7 +13,7 @@ const Layout = ({ children }) => {
   return (
     <div className="layout">
       <Head>
-        <title>Beads Charm</title>
+        <title>Beads Charm Collection</title>
       </Head>
       <header>
         <Navbar />

@@ -92,7 +92,7 @@ const Navbar = () => {
       <div className={`navbar-container ${scrolled ? 'scrolled' : ''}`}>
         <div className="logo">
           <Link href="/">
-            <Image src="/logo.png" alt="Beads Charm Logo" width={120} height={60} quality={100} />
+            <Image src="/logo.png" alt="Beads Charm Collection Logo" width={120} height={60} quality={100} />
           </Link>
         </div>
         
@@ -328,7 +328,7 @@ const Navbar = () => {
               marginBottom: '30px'
             }}>
               <div className="mobile-logo">
-                <Image src="/logo.png" alt="Beads Charm Logo" width={100} height={50} quality={100} />
+                <Image src="/logo.png" alt="Beads Charm Collection Logo" width={100} height={50} quality={100} />
               </div>
               <button 
                 onClick={toggleMobileMenu} 

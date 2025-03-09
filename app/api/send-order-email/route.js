@@ -122,7 +122,7 @@ export async function POST(request) {
     const customerEmailContent = {
       from: process.env.GMAIL_USER || 'derricknjuguna414@gmail.com',
       to: user.email,
-      subject: 'Your Order Confirmation - Tuji Beads',
+      subject: 'Your Order Confirmation - Beads Charm Collection',
       html: `
         <h2>Thank you for your order!</h2>
         <p>Dear ${user.name},</p>
@@ -141,7 +141,7 @@ export async function POST(request) {
         <p><strong>Order Date:</strong> ${new Date().toLocaleString()}</p>
         
         <p>We will notify you when your order is ready for delivery or pickup.</p>
-        <p>Thank you for shopping with Tuji Beads!</p>
+        <p>Thank you for shopping with Beads Charm Collection!</p>
       `
     };
     

@@ -5,10 +5,10 @@ const AboutUs = () => {
   return (
     <div className="about-us-container">
       <div className="about-us-content">
-        <h1>About Tuji Beads</h1>
+        <h1>About Beads Charm Collection</h1>
         <div className="about-us-description">
           <p>
-            Tuji Beads is a Nairobi-based e-commerce business specializing in handcrafted beadwork, 
+            Beads Charm Collection is a Nairobi-based e-commerce business specializing in handcrafted beadwork, 
             offering a unique selection of handmade jewelry, sandals, and accessories.
           </p>
           <p>
@@ -43,7 +43,7 @@ const AboutUs = () => {
       <div className="about-us-team">
         <h2>Our Team</h2>
         <p>
-          Behind Tuji Beads is a dedicated team of skilled artisans and designers who are passionate about 
+          Behind Beads Charm Collection is a dedicated team of skilled artisans and designers who are passionate about 
           preserving traditional Kenyan beadwork while bringing innovative designs to the modern market.
         </p>
         <div className="team-members">
