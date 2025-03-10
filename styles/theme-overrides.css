@@ -1,20 +1,20 @@
 /* Theme-specific overrides - These styles will apply when dark theme is active */
 [data-theme='dark'] .layout {
-  background-color: var(--bg-color);
-  color: var(--text-color);
+  background-color: var(--dark-bg-color);
+  color: var(--dark-text-color);
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 /* Navbar styling */
 [data-theme='dark'] .navbar-container {
-  background-color: var(--nav-bg);
-  border-bottom: 1px solid var(--border-color);
+  background-color: var(--dark-bg-color);
+  border-bottom: 1px solid var(--dark-border-color);
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
   backdrop-filter: blur(10px);
 }
 
 [data-theme='dark'] .navbar-container a {
-  color: var(--text-color) !important;
+  color: var(--dark-text-color) !important;
 }
 
 [data-theme='dark'] .navbar-container a:hover {
@@ -23,7 +23,7 @@
 
 /* Product card styling */
 [data-theme='dark'] .product-card {
-  background-color: var(--card-bg-color);
+  background-color: var(--dark-menu-bg-color);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
   border: var(--card-border);
   border-radius: var(--card-radius);
@@ -42,7 +42,7 @@
 }
 
 [data-theme='dark'] .product-card h3 {
-  color: var(--text-color);
+  color: var(--dark-text-color);
 }
 
 /* Cart styling */
@@ -62,7 +62,7 @@
 
 /* Mobile navigation */
 [data-theme='dark'] .mobile-nav {
-  background-color: var(--dark-bg-color) !important;
+  background-color: var(--dark-menu-bg-color);
   visibility: hidden !important;
   opacity: 0 !important;
   transition: visibility 0s, opacity 0.3s ease-in-out, transform 0.3s ease-in-out !important;
@@ -141,9 +141,9 @@
 
 /* Footer styling */
 [data-theme='dark'] .footer-container {
-  background-color: var(--nav-bg);
-  color: var(--text-color);
-  border-top: 1px solid var(--border-color);
+  background-color: var(--dark-bg-color);
+  color: var(--dark-text-color);
+  border-top: 1px solid var(--dark-border-color);
 }
 
 [data-theme='dark'] .footer-container a:hover {
@@ -159,7 +159,7 @@
 }
 
 [data-theme='dark'] .hero-banner-container h3 {
-  color: var(--text-color);
+  color: var(--dark-text-color);
 }
 
 [data-theme='dark'] .hero-banner-container h1 {
@@ -285,7 +285,7 @@
 
 /* Product detail page styling */
 [data-theme='dark'] .product-detail-container {
-  background-color: var(--bg-color);
+  background-color: var(--dark-bg-color);
 }
 
 [data-theme='dark'] .product-detail-image {
@@ -319,7 +319,7 @@
 }
 
 [data-theme='dark'] .product-detail-desc h4 {
-  color: var(--text-color);
+  color: var(--dark-text-color);
   margin-top: 10px;
 }
 
@@ -347,7 +347,7 @@
 }
 
 [data-theme='dark'] .quantity-desc span {
-  color: var(--text-color);
+  color: var(--dark-text-color);
 }
 
 [data-theme='dark'] .quantity-desc .minus {
@@ -360,7 +360,7 @@
 
 [data-theme='dark'] .buttons .add-to-cart {
   background-color: var(--card-hover-bg);
-  color: var(--text-color);
+  color: var(--dark-text-color);
   border: 1px solid var(--border-color);
 }
 
@@ -374,7 +374,7 @@
 
 /* Product details page improvements */
 [data-theme='dark'] .product-detail-desc .buttons .add-to-cart {
-  color: var(--text-color);
+  color: var(--dark-text-color);
   border: 1px solid var(--border-color);
   background-color: var(--card-hover-bg);
 }
@@ -392,7 +392,7 @@
 }
 
 [data-theme='dark'] .maylike-products-wrapper h2 {
-  color: var(--text-color);
+  color: var(--dark-text-color);
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
 
@@ -402,7 +402,7 @@
 
 /* Cart styling */
 [data-theme='dark'] .cart-heading {
-  color: var(--text-color);
+  color: var(--dark-text-color);
 }
 
 [data-theme='dark'] .cart-num-items {
@@ -417,7 +417,7 @@
 }
 
 [data-theme='dark'] .empty-cart h3 {
-  color: var(--text-color);
+  color: var(--dark-text-color);
 }
 
 [data-theme='dark'] .cart-product-container {
@@ -435,7 +435,7 @@
 }
 
 [data-theme='dark'] .cart-product-name {
-  color: var(--text-color);
+  color: var(--dark-text-color);
 }
 
 [data-theme='dark'] .cart-product-price {
@@ -453,7 +453,7 @@
 }
 
 [data-theme='dark'] .total {
-  color: var(--text-color);
+  color: var(--dark-text-color);
 }
 
 [data-theme='dark'] .total h3 {
@@ -474,7 +474,7 @@
 }
 
 [data-theme='dark'] .about-us-container h2 {
-  color: var(--text-color);
+  color: var(--dark-text-color);
 }
 
 [data-theme='dark'] .about-us-container p {
@@ -585,7 +585,132 @@
 
 /* Dark Theme Variables */
 :root {
-  --dark-bg-color: #1e1e24;
+  --dark-bg-color: #121212;
+  --dark-menu-bg-color: #1a1a1a;
   --dark-text-color: #ffffff;
   --dark-border-color: #3a3a46;
+  --light-text-color: #333333;
+  --light-bg-color: #ffffff;
+}
+
+/* Global Dark Theme Styles */
+[data-theme='dark'] {
+  background-color: var(--dark-bg-color) !important;
+  color: var(--dark-text-color) !important;
+}
+
+[data-theme='dark'] body {
+  background-color: var(--dark-bg-color) !important;
+  color: var(--dark-text-color) !important;
+}
+
+/* Fix for hamburger menu visibility */
+.mobile-nav {
+  visibility: hidden !important;
+  opacity: 0 !important;
+  transition: visibility 0s, opacity 0.3s ease-in-out, transform 0.3s ease-in-out !important;
+}
+
+.mobile-nav.open {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: flex !important;
+}
+
+/* Ensure hamburger button is visible in both themes */
+.hamburger-button span {
+  background-color: var(--light-text-color) !important; /* Default for light theme */
+}
+
+[data-theme='dark'] .hamburger-button span {
+  background-color: var(--dark-text-color) !important;
+}
+
+/* Ensure consistent dark theme across all devices */
+[data-theme='dark'] .navbar-container {
+  background-color: var(--dark-bg-color) !important;
+  border-bottom: 1px solid var(--dark-border-color) !important;
+}
+
+[data-theme='dark'] .mobile-nav {
+  background-color: var(--dark-menu-bg-color) !important;
+}
+
+[data-theme='dark'] .mobile-nav-links a,
+[data-theme='dark'] .mobile-nav-buttons button,
+[data-theme='dark'] .mobile-nav-buttons button span {
+  color: var(--dark-text-color) !important;
+}
+
+[data-theme='dark'] .mobile-nav-links a {
+  border-bottom: 1px solid var(--dark-border-color) !important;
+}
+
+[data-theme='dark'] .mobile-close-btn svg,
+[data-theme='dark'] .mobile-nav-buttons button svg {
+  color: var(--dark-text-color) !important;
+}
+
+/* Ensure all buttons are visible in dark mode */
+[data-theme='dark'] button svg,
+[data-theme='dark'] .cart-icon svg,
+[data-theme='dark'] .auth-button svg,
+[data-theme='dark'] .theme-toggle-button svg,
+[data-theme='dark'] .currency-toggle-button svg {
+  color: var(--dark-text-color) !important;
+  fill: var(--dark-text-color) !important;
+}
+
+/* Main content dark theme */
+[data-theme='dark'] .main-container {
+  background-color: var(--dark-bg-color) !important;
+}
+
+[data-theme='dark'] .products-heading h2 {
+  color: var(--dark-text-color) !important;
+}
+
+[data-theme='dark'] .products-container {
+  background-color: var(--dark-bg-color) !important;
+}
+
+[data-theme='dark'] .product-card {
+  background-color: var(--dark-menu-bg-color) !important;
+}
+
+[data-theme='dark'] .product-name,
+[data-theme='dark'] .product-price {
+  color: var(--dark-text-color) !important;
+}
+
+/* Footer dark theme */
+[data-theme='dark'] .footer-container {
+  background-color: var(--dark-bg-color) !important;
+  color: var(--dark-text-color) !important;
+  border-top: 1px solid var(--dark-border-color) !important;
+}
+
+/* Fix for light theme hamburger menu */
+[data-theme='light'] .hamburger-button span {
+  background-color: #333333 !important;
+}
+
+/* Fix for light theme mobile menu text */
+[data-theme='light'] .mobile-nav {
+  background-color: rgba(255, 255, 255, 0.98) !important;
+}
+
+[data-theme='light'] .mobile-nav-links a {
+  color: #333333 !important;
+  border-bottom: 1px solid #e0e0e0 !important;
+}
+
+[data-theme='light'] .mobile-nav-buttons button,
+[data-theme='light'] .mobile-nav-buttons button span,
+[data-theme='light'] .mobile-close-btn svg {
+  color: #333333 !important;
+}
+
+[data-theme='light'] .mobile-nav-buttons button svg {
+  color: #333333 !important;
 }

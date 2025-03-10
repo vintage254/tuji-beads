@@ -77,7 +77,8 @@ const Navbar = () => {
   const textColor = theme === 'dark' ? '#ffffff' : '#333333';
   const iconColor = theme === 'dark' ? '#ffffff' : '#333333';
   const hamburgerColor = theme === 'dark' ? '#ffffff' : '#333333';
-  const darkBgColor = '#1e1e24'; // Consistent dark theme background color
+  const darkBgColor = '#121212'; // Darker background color for dark theme
+  const darkMobileMenuBgColor = '#1a1a1a'; // Slightly lighter than the background for contrast
 
   return (
     <>
@@ -292,7 +293,7 @@ const Navbar = () => {
               left: 0,
               width: '100%',
               height: '100vh',
-              backgroundColor: theme === 'dark' ? darkBgColor : 'rgba(255, 255, 255, 0.98)',
+              backgroundColor: theme === 'dark' ? darkMobileMenuBgColor : 'rgba(255, 255, 255, 0.98)',
               zIndex: 1000,
               transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
               transition: 'transform 0.3s ease-in-out',
