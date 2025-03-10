@@ -8,17 +8,24 @@ const CurrencyPopup = () => {
   const { handleCurrencyChange, currency, setCurrency } = useStateContext();
 
   useEffect(() => {
-    // Check if the user has already selected a currency
-    const hasSelectedCurrency = localStorage.getItem('hasSelectedCurrency');
+    // Force the popup to show on initial load regardless of localStorage
+    // This is for testing purposes - we'll remove this later
+    setShowPopup(true);
     
-    if (!hasSelectedCurrency) {
-      // Show popup after a short delay
-      const timer = setTimeout(() => {
-        setShowPopup(true);
-      }, 1000);
+    // Clear any existing currency selection for testing
+    // localStorage.removeItem('hasSelectedCurrency');
+    
+    // Check if the user has already selected a currency
+    // const hasSelectedCurrency = localStorage.getItem('hasSelectedCurrency');
+    
+    // if (!hasSelectedCurrency) {
+    //   // Show popup after a short delay
+    //   const timer = setTimeout(() => {
+    //     setShowPopup(true);
+    //   }, 1000);
       
-      return () => clearTimeout(timer);
-    }
+    //   return () => clearTimeout(timer);
+    // }
   }, []);
 
   const selectCurrency = (selectedCurrency) => {

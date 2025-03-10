@@ -148,11 +148,6 @@ const ProductDetails = ({ product, products }) => {
                         <button type="button" className="buy-now" onClick={handleBuyNow}>
                             Order Now
                         </button>
-                        {negotiable && (
-                            <button type="button" className="negotiate-button" onClick={handleNegotiate}>
-                                <FaWhatsapp size={18} /> Negotiate Price
-                            </button>
-                        )}
                     </div>
                 </div>
             </div>
