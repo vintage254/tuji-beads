@@ -15,8 +15,14 @@ const Navbar = () => {
   const { showCart, setShowCart, showAuth, setShowAuth, totalQuantities, user, logout, theme, toggleTheme, currency, setCurrency, isLoadingExchangeRate } = useStateContext();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
+  const [windowWidth, setWindowWidth] = useState(0);
   const [scrolled, setScrolled] = useState(false);
+  
+  // Initialize window width on client side only
+  useEffect(() => {
+    setWindowWidth(window.innerWidth);
+  }, []);
+  
   const isMobile = windowWidth <= 768;
   
   // Handle window resize and scroll
@@ -36,24 +42,20 @@ const Navbar = () => {
       }
     };
     
-    if (typeof window !== 'undefined') {
-      window.addEventListener('resize', handleResize);
-      window.addEventListener('scroll', handleScroll);
-      handleResize(); // Initialize on mount
-      return () => {
-        window.removeEventListener('resize', handleResize);
-        window.removeEventListener('scroll', handleScroll);
-      };
-    }
+    window.addEventListener('resize', handleResize);
+    window.addEventListener('scroll', handleScroll);
+    
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('scroll', handleScroll);
+    };
   }, []);
   
   useEffect(() => {
     console.log('Mobile menu state changed:', mobileMenuOpen);
     
     // Apply body scroll lock when menu is open
-    if (typeof document !== 'undefined') {
-      document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
-    }
+    document.body.style.overflow = mobileMenuOpen ? 'hidden' : '';
   }, [mobileMenuOpen]);
   
   const handleSignIn = () => {
@@ -62,28 +64,11 @@ const Navbar = () => {
   };
   
   const toggleMobileMenu = () => {
-    console.log('Toggling mobile menu, current state:', mobileMenuOpen);
-    console.log('Mobile menu element:', document.querySelector('.mobile-nav'));
     setMobileMenuOpen(!mobileMenuOpen);
-    // Prevent body scrolling when menu is open
-    if (typeof document !== 'undefined') {
-      document.body.style.overflow = !mobileMenuOpen ? 'hidden' : '';
-      console.log('Mobile menu toggled, new state:', !mobileMenuOpen);
-      
-      // Force a repaint to ensure the menu is visible
-      setTimeout(() => {
-        const mobileNav = document.querySelector('.mobile-nav');
-        if (mobileNav) {
-          console.log('Mobile nav after toggle:', mobileNav.className);
-          console.log('Mobile nav style:', mobileNav.style.transform);
-        }
-      }, 100);
-    }
   };
   
   // Function to handle currency change
   const handleCurrencyChange = () => {
-    // Open the currency modal
     const newCurrency = currency === 'KSH' ? 'USD' : 'KSH';
     setCurrency(newCurrency);
   };
@@ -130,7 +115,7 @@ const Navbar = () => {
                 display: 'block',
                 width: '24px',
                 height: '3px',
-                backgroundColor: '#333',
+                backgroundColor: theme === 'dark' ? '#e0e0e0' : '#333',
                 marginBottom: '5px',
                 borderRadius: '2px'
               }}></span>
@@ -138,7 +123,7 @@ const Navbar = () => {
                 display: 'block',
                 width: '24px',
                 height: '3px',
-                backgroundColor: '#333',
+                backgroundColor: theme === 'dark' ? '#e0e0e0' : '#333',
                 marginBottom: '5px',
                 borderRadius: '2px'
               }}></span>
@@ -146,7 +131,7 @@ const Navbar = () => {
                 display: 'block',
                 width: '24px',
                 height: '3px',
-                backgroundColor: '#333',
+                backgroundColor: theme === 'dark' ? '#e0e0e0' : '#333',
                 borderRadius: '2px'
               }}></span>
             </button>
@@ -178,9 +163,9 @@ const Navbar = () => {
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
             >
               {theme === 'dark' ? (
-                <FiSun className="theme-toggle-icon" />
+                <FiSun style={{ color: '#e0e0e0' }} />
               ) : (
-                <FiMoon className="theme-toggle-icon" />
+                <FiMoon style={{ color: '#333' }} />
               )}
             </button>
             
@@ -191,32 +176,40 @@ const Navbar = () => {
               onClick={handleCurrencyChange}
               disabled={isLoadingExchangeRate}
             >
-              <span className="currency-symbol">{currency === 'USD' ? '$' : 'KSh'}</span>
+              <span style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }}>
+                {currency === 'USD' ? '$' : 'KSh'}
+              </span>
               {isLoadingExchangeRate && <span className="loading-dot"></span>}
             </button>
             
             {user ? (
               <div className="user-menu">
                 <span className="user-name">
-                  <AiOutlineUser />
-                  <span className="user-name-text">{user.name || user.email}</span>
+                  <AiOutlineUser style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                  <span className="user-name-text" style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }}>
+                    {user.name || user.email}
+                  </span>
                 </span>
-                <button type="button" className="logout-button" onClick={() => {
-                  logout();
-                  router.push('/');
-                }}>
-                  <AiOutlineLogout />
-                  <span>Logout</span>
+                <button 
+                  type="button" 
+                  className="logout-button" 
+                  onClick={() => {
+                    logout();
+                    router.push('/');
+                  }}
+                >
+                  <AiOutlineLogout style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                  <span style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }}>Logout</span>
                 </button>
               </div>
             ) : (
               <button type="button" className="auth-button" onClick={handleSignIn}>
-                <AiOutlineUser />
-                <span>Sign In</span>
+                <AiOutlineUser style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                <span style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }}>Sign In</span>
               </button>
             )}
             <button type="button" className="cart-icon" onClick={() => setShowCart(true)}>
-              <AiOutlineShopping />
+              <AiOutlineShopping style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
               <span className="cart-item-qty">{totalQuantities || 0}</span>
             </button>
           </div>
@@ -245,7 +238,7 @@ const Navbar = () => {
                 position: 'relative'
               }}
             >
-              <AiOutlineShopping size={25} />
+              <AiOutlineShopping size={25} style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
               {totalQuantities > 0 && (
                 <span className="cart-item-qty" style={{
                   position: 'absolute',
@@ -271,168 +264,193 @@ const Navbar = () => {
         )}
         
         {/* Mobile Navigation Menu */}
-        <div 
-          className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`} 
-          style={{ 
-            position: 'fixed',
-            top: 0,
-            left: 0,
-            width: '100%',
-            height: '100vh',
-            backgroundColor: 'rgba(255, 255, 255, 0.98)',
-            zIndex: 1000,
-            transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
-            transition: 'transform 0.3s ease-in-out',
-            display: 'flex',
-            flexDirection: 'column',
-            padding: '20px',
-            boxShadow: mobileMenuOpen ? '0 0 10px rgba(0,0,0,0.1)' : 'none',
-            overflow: 'auto'
-          }}
-        >
-          <div className="mobile-nav-content" style={{ width: '100%' }}>
-            <div className="mobile-nav-header" style={{ 
-              display: 'flex', 
-              justifyContent: 'space-between', 
-              alignItems: 'center',
-              marginBottom: '30px'
-            }}>
-              <div className="mobile-logo">
-                <Image src="/logo.png" alt="Beads Charm Collection Logo" width={100} height={50} quality={100} />
-              </div>
-              <button 
-                onClick={toggleMobileMenu} 
-                aria-label="Close menu" 
-                className="mobile-close-btn"
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  cursor: 'pointer',
-                  fontSize: '24px'
-                }}
-              >
-                <AiOutlineClose size={24} />
-              </button>
-            </div>
-            <div className="mobile-nav-links" style={{
+        {isMobile && (
+          <div 
+            className={`mobile-nav ${mobileMenuOpen ? 'open' : ''}`} 
+            style={{ 
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: '100vh',
+              backgroundColor: theme === 'dark' ? '#1e1e24' : 'rgba(255, 255, 255, 0.98)',
+              zIndex: 1000,
+              transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
+              transition: 'transform 0.3s ease-in-out',
               display: 'flex',
               flexDirection: 'column',
-              gap: '15px'
-            }}>
-              <Link 
-                href="/" 
-                onClick={() => setMobileMenuOpen(false)}
-                style={{
-                  fontSize: '18px',
-                  color: '#333',
-                  textDecoration: 'none',
-                  padding: '10px 0',
-                  borderBottom: '1px solid #eee'
-                }}
-              >
-                Home
-              </Link>
-              <Link 
-                href="/products" 
-                onClick={() => setMobileMenuOpen(false)}
-                style={{
-                  fontSize: '18px',
-                  color: '#333',
-                  textDecoration: 'none',
-                  padding: '10px 0',
-                  borderBottom: '1px solid #eee'
-                }}
-              >
-                Products
-              </Link>
-              <Link 
-                href="/about" 
-                onClick={() => setMobileMenuOpen(false)}
-                style={{
-                  fontSize: '18px',
-                  color: '#333',
-                  textDecoration: 'none',
-                  padding: '10px 0',
-                  borderBottom: '1px solid #eee'
-                }}
-              >
-                About Us
-              </Link>
-              {user && (
+              padding: '20px',
+              boxShadow: mobileMenuOpen ? '0 0 10px rgba(0,0,0,0.1)' : 'none',
+              overflow: 'auto'
+            }}
+          >
+            <div className="mobile-nav-content" style={{ width: '100%' }}>
+              <div className="mobile-nav-header" style={{ 
+                display: 'flex', 
+                justifyContent: 'space-between', 
+                alignItems: 'center',
+                marginBottom: '30px'
+              }}>
+                <div className="mobile-logo">
+                  <Image src="/logo.png" alt="Beads Charm Collection Logo" width={100} height={50} quality={100} />
+                </div>
+                <button 
+                  onClick={toggleMobileMenu} 
+                  aria-label="Close menu" 
+                  className="mobile-close-btn"
+                  style={{
+                    background: 'transparent',
+                    border: 'none',
+                    cursor: 'pointer',
+                    fontSize: '24px'
+                  }}
+                >
+                  <AiOutlineClose size={24} style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                </button>
+              </div>
+              <div className="mobile-nav-links" style={{
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '15px'
+              }}>
                 <Link 
-                  href="/order-history" 
+                  href="/" 
                   onClick={() => setMobileMenuOpen(false)}
                   style={{
                     fontSize: '18px',
-                    color: '#333',
+                    color: theme === 'dark' ? '#e0e0e0' : '#333',
                     textDecoration: 'none',
                     padding: '10px 0',
                     borderBottom: '1px solid #eee'
                   }}
                 >
-                  Order History
+                  Home
                 </Link>
-              )}
+                <Link 
+                  href="/products" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    fontSize: '18px',
+                    color: theme === 'dark' ? '#e0e0e0' : '#333',
+                    textDecoration: 'none',
+                    padding: '10px 0',
+                    borderBottom: '1px solid #eee'
+                  }}
+                >
+                  Products
+                </Link>
+                <Link 
+                  href="/about" 
+                  onClick={() => setMobileMenuOpen(false)}
+                  style={{
+                    fontSize: '18px',
+                    color: theme === 'dark' ? '#e0e0e0' : '#333',
+                    textDecoration: 'none',
+                    padding: '10px 0',
+                    borderBottom: '1px solid #eee'
+                  }}
+                >
+                  About Us
+                </Link>
+                {user && (
+                  <Link 
+                    href="/order-history" 
+                    onClick={() => setMobileMenuOpen(false)}
+                    style={{
+                      fontSize: '18px',
+                      color: theme === 'dark' ? '#e0e0e0' : '#333',
+                      textDecoration: 'none',
+                      padding: '10px 0',
+                      borderBottom: '1px solid #eee'
+                    }}
+                  >
+                    Order History
+                  </Link>
+                )}
+              </div>
               
               <div className="mobile-nav-buttons" style={{
-                marginTop: '30px',
                 display: 'flex',
                 flexDirection: 'column',
-                gap: '15px'
+                gap: '15px',
+                marginTop: '30px'
               }}>
-                {/* Theme Toggle Button in Mobile Menu */}
+                {/* Theme Toggle Button for Mobile */}
                 <button 
                   type="button" 
-                  className="theme-toggle-button-mobile" 
+                  className="mobile-theme-toggle" 
                   onClick={toggleTheme}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '16px',
+                    color: theme === 'dark' ? '#e0e0e0' : '#333',
+                    cursor: 'pointer',
+                    padding: '10px 0'
+                  }}
                 >
                   {theme === 'dark' ? (
                     <>
-                      <FiSun className="theme-toggle-icon" />
+                      <FiSun style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
                       <span>Light Theme</span>
                     </>
                   ) : (
                     <>
-                      <FiMoon className="theme-toggle-icon" />
+                      <FiMoon style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
                       <span>Dark Theme</span>
                     </>
                   )}
                 </button>
                 
-                {/* Currency Toggle Button in Mobile Menu */}
+                {/* Currency Toggle Button for Mobile */}
                 <button 
                   type="button" 
-                  className="currency-toggle-button-mobile" 
+                  className="mobile-currency-toggle" 
                   onClick={handleCurrencyChange}
                   disabled={isLoadingExchangeRate}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '10px',
+                    background: 'none',
+                    border: 'none',
+                    fontSize: '16px',
+                    color: theme === 'dark' ? '#e0e0e0' : '#333',
+                    cursor: 'pointer',
+                    padding: '10px 0'
+                  }}
                 >
-                  <span className="currency-symbol">
+                  <FaExchangeAlt style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                  <span>
                     {currency === 'USD' ? 'Switch to KSh' : 'Switch to $'}
                   </span>
                   {isLoadingExchangeRate && <span className="loading-dot"></span>}
                 </button>
                 
+                {/* User Menu for Mobile */}
                 {user ? (
                   <>
-                    <div className="user-menu-mobile" style={{
+                    <div style={{
                       display: 'flex',
                       alignItems: 'center',
                       gap: '10px',
                       fontSize: '16px',
-                      color: '#333'
+                      color: theme === 'dark' ? '#e0e0e0' : '#333'
                     }}>
                       <span className="user-name-mobile">
-                        <AiOutlineUser />
+                        <AiOutlineUser style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
                         <span style={{ marginLeft: '5px' }}>{user.name || user.email}</span>
                       </span>
                     </div>
                     <button 
                       type="button" 
-                      className="logout-button-mobile"
                       onClick={() => {
                         logout();
-                        router.push('/');
                         setMobileMenuOpen(false);
+                        router.push('/');
                       }}
                       style={{
                         display: 'flex',
@@ -441,19 +459,18 @@ const Navbar = () => {
                         background: 'none',
                         border: 'none',
                         fontSize: '16px',
-                        color: '#333',
+                        color: theme === 'dark' ? '#e0e0e0' : '#333',
                         cursor: 'pointer',
                         padding: '10px 0'
                       }}
                     >
-                      <AiOutlineLogout />
+                      <AiOutlineLogout style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
                       <span>Logout</span>
                     </button>
                   </>
                 ) : (
                   <button 
                     type="button" 
-                    className="auth-button-mobile"
                     onClick={handleSignIn}
                     style={{
                       display: 'flex',
@@ -462,21 +479,22 @@ const Navbar = () => {
                       background: 'none',
                       border: 'none',
                       fontSize: '16px',
-                      color: '#333',
+                      color: theme === 'dark' ? '#e0e0e0' : '#333',
                       cursor: 'pointer',
                       padding: '10px 0'
                     }}
                   >
-                    <AiOutlineUser />
+                    <AiOutlineUser style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
                     <span>Sign In</span>
                   </button>
                 )}
+                
+                {/* Cart Button for Mobile */}
                 <button 
                   type="button" 
-                  className="cart-icon-mobile"
                   onClick={() => {
-                    setShowCart(true);
                     setMobileMenuOpen(false);
+                    setShowCart(true);
                   }}
                   style={{
                     display: 'flex',
@@ -485,172 +503,27 @@ const Navbar = () => {
                     background: 'none',
                     border: 'none',
                     fontSize: '16px',
-                    color: '#333',
+                    color: theme === 'dark' ? '#e0e0e0' : '#333',
                     cursor: 'pointer',
                     padding: '10px 0'
                   }}
                 >
-                  <AiOutlineShopping />
+                  <AiOutlineShopping style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
                   <span>Cart ({totalQuantities || 0})</span>
                 </button>
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
-
+      
+      {/* Cart Component */}
       {showCart && <Cart />}
-      {showAuth && <Authentication setShowAuth={setShowAuth} />}
-
-      <style jsx global>{`
-        /* Hamburger Menu Styles */
-        .hamburger-button {
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          padding: 0;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          width: 40px;
-          height: 40px;
-          z-index: 1000;
-        }
-        
-        .hamburger-icon {
-          width: 24px;
-          height: 18px;
-          position: relative;
-          transform: rotate(0deg);
-          transition: .5s ease-in-out;
-        }
-        
-        .hamburger-line {
-          display: block;
-          position: absolute;
-          height: 3px;
-          width: 100%;
-          background: #333;
-          border-radius: 3px;
-          opacity: 1;
-          left: 0;
-          transform: rotate(0deg);
-          transition: .25s ease-in-out;
-        }
-        
-        .hamburger-icon .hamburger-line:nth-child(1) {
-          top: 0px;
-        }
-        
-        .hamburger-icon .hamburger-line:nth-child(2) {
-          top: 8px;
-        }
-        
-        .hamburger-icon .hamburger-line:nth-child(3) {
-          top: 16px;
-        }
-        
-        .hamburger-icon.open .hamburger-line:nth-child(1) {
-          top: 8px;
-          transform: rotate(135deg);
-        }
-        
-        .hamburger-icon.open .hamburger-line:nth-child(2) {
-          opacity: 0;
-          left: -60px;
-        }
-        
-        .hamburger-icon.open .hamburger-line:nth-child(3) {
-          top: 8px;
-          transform: rotate(-135deg);
-        }
-        
-        /* Theme toggle button styles */
-        .theme-toggle-button, .theme-toggle-button-mobile {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: var(--text-color, #333);
-          transition: color 0.3s ease;
-        }
-        
-        .theme-toggle-button:hover, .theme-toggle-button-mobile:hover {
-          color: var(--accent-color, #666);
-        }
-        
-        /* Currency display styles */
-        .currency-display {
-          padding: 5px 10px;
-          border-radius: 4px;
-          background-color: var(--light-bg-color, #f5f5f5);
-          color: var(--text-color, #333);
-          font-weight: bold;
-        }
-        
-        /* Currency toggle button styles */
-        .currency-toggle-button, .currency-toggle-button-mobile {
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          background: none;
-          border: none;
-          cursor: pointer;
-          color: var(--text-color, #333);
-          transition: color 0.3s ease;
-        }
-        
-        .currency-toggle-button:hover, .currency-toggle-button-mobile:hover {
-          color: var(--accent-color, #666);
-        }
-        
-        /* Dark theme variables */
-        [data-theme='dark'] {
-          --bg-color: #121212;
-          --text-color: #f5f5f5;
-          --light-bg-color: #2a2a2a;
-          --accent-color: #bb86fc;
-          --border-color: #333;
-        }
-        
-        /* Light theme variables */
-        [data-theme='light'] {
-          --bg-color: #ffffff;
-          --text-color: #333333;
-          --light-bg-color: #f5f5f5;
-          --accent-color: #f02d34;
-          --border-color: #e0e0e0;
-        }
-        
-        /* Apply theme colors */
-        body {
-          background-color: var(--bg-color);
-          color: var(--text-color);
-          transition: background-color 0.3s ease, color 0.3s ease;
-        }
-        
-        .navbar-container {
-          background-color: var(--bg-color);
-          border-bottom: 1px solid var(--border-color);
-        }
-        
-        .mobile-nav {
-          background-color: var(--bg-color);
-        }
-        
-        .mobile-nav-links a, .mobile-nav-buttons button {
-          color: var(--text-color);
-          border-bottom: 1px solid var(--border-color);
-        }
-        
-        .hamburger-line {
-          background: var(--text-color);
-        }
-      `}</style>
+      
+      {/* Authentication Component */}
+      {showAuth && <Authentication />}
     </>
-  )
-}
+  );
+};
 
 export default Navbar;
