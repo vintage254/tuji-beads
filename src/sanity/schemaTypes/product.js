@@ -57,6 +57,13 @@ const product = {
       type: 'string',
     },
     {
+      name: 'negotiable',
+      title: 'Negotiable',
+      type: 'boolean',
+      description: 'Mark this product as negotiable to allow customers to negotiate the price',
+      initialValue: false
+    },
+    {
       name: 'featured',
       title: 'Featured Product',
       type: 'boolean',

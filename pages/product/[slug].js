@@ -2,13 +2,14 @@ import React, { useState } from 'react'
 import { client, urlFor } from '../../lib/client';
 import Image from 'next/image';
 import { AiOutlineMinus, AiOutlinePlus, AiFillStar, AiOutlineStar } from 'react-icons/ai';
+import { FaWhatsapp } from 'react-icons/fa';
 import { Product } from '../../components';
 import { useStateContext } from '../../context/StateContext';
 
 const ProductDetails = ({ product, products }) => {
     const [index, setIndex] = useState(0);
     const [isLoading, setIsLoading] = useState(true);
-    const { decQty, incQty, qty, onAdd, setShowCart } = useStateContext();
+    const { decQty, incQty, qty, onAdd, setShowCart, currency, convertPrice, isLoadingExchangeRate } = useStateContext();
     
     // Handle loading state for fallback pages
     React.useEffect(() => {
@@ -42,7 +43,7 @@ const ProductDetails = ({ product, products }) => {
         );
     }
 
-    const { image, name, details, price } = product;
+    const { image, name, details, price, negotiable } = product;
     
     // Generate image URLs safely
     const getImageUrl = (img) => {
@@ -54,6 +55,27 @@ const ProductDetails = ({ product, products }) => {
     const handleBuyNow = () => {
         onAdd(product, qty);
         setShowCart(true);
+    };
+
+    // Handle WhatsApp negotiation
+    const handleNegotiate = () => {
+        const message = `Hello, I'm interested in negotiating the price for ${name} (KSH${price}). Can we discuss?`;
+        const encodedMessage = encodeURIComponent(message);
+        const whatsappUrl = `https://wa.me/+254712345678?text=${encodedMessage}`;
+        window.open(whatsappUrl, '_blank');
+    };
+
+    // Display price based on selected currency
+    const displayPrice = () => {
+        if (isLoadingExchangeRate) {
+            return <span className="loading-price">Loading price...</span>;
+        }
+        
+        if (currency === 'USD') {
+            return <span>${convertPrice(price)}</span>;
+        }
+        
+        return <span>KSh {price}</span>;
     };
 
     return (
@@ -98,7 +120,14 @@ const ProductDetails = ({ product, products }) => {
                     </div>
                     <h4>Details:</h4>
                     <p>{details}</p>
-                    <p className="price">KSH{price}</p>
+                    
+                    <div className="price-container">
+                        <p className="price">{displayPrice()}</p>
+                        {negotiable && (
+                            <span className="negotiable-badge">Negotiable</span>
+                        )}
+                    </div>
+                    
                     <div className="quantity">
                         <h3>Quantity:</h3>
                         <p className="quantity-desc">
@@ -118,6 +147,11 @@ const ProductDetails = ({ product, products }) => {
                         <button type="button" className="buy-now" onClick={handleBuyNow}>
                             Order Now
                         </button>
+                        {negotiable && (
+                            <button type="button" className="negotiate-button" onClick={handleNegotiate}>
+                                <FaWhatsapp /> Negotiate Price
+                            </button>
+                        )}
                     </div>
                 </div>
             </div>

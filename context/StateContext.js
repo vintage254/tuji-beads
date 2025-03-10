@@ -12,6 +12,9 @@ export const StateContext = ({ children }) => {
   const [qty, setQty] = useState(1);
   const [user, setUser] = useState(null);
   const [sessionId, setSessionId] = useState(null);
+  const [currency, setCurrency] = useState('KSH');
+  const [exchangeRate, setExchangeRate] = useState(null);
+  const [isLoadingExchangeRate, setIsLoadingExchangeRate] = useState(false);
 
   // Function to parse cookies
   const parseCookies = () => {
@@ -93,6 +96,12 @@ export const StateContext = ({ children }) => {
       const storedUser = localStorage.getItem('user');
       const storedEmail = localStorage.getItem('userEmail');
       
+      // Load saved currency preference
+      const savedCurrency = localStorage.getItem('currency');
+      if (savedCurrency) {
+        setCurrency(savedCurrency);
+      }
+      
       if (storedUser) {
         try {
           setUser(JSON.parse(storedUser));
@@ -163,6 +172,36 @@ export const StateContext = ({ children }) => {
       }
     }
   }, []);
+
+  // Fetch exchange rate when currency changes or on initial load
+  useEffect(() => {
+    const fetchExchangeRate = async () => {
+      if (currency) {
+        try {
+          setIsLoadingExchangeRate(true);
+          // Use a free exchange rate API
+          const response = await fetch(`https://api.exchangerate-api.com/v4/latest/USD`);
+          const data = await response.json();
+          
+          // Assuming KES is the code for Kenyan Shilling in the API
+          const kshRate = data.rates.KES || 110; // Fallback rate if API fails
+          setExchangeRate(kshRate);
+          localStorage.setItem('exchangeRate', kshRate.toString());
+          
+          console.log(`Exchange rate loaded: 1 USD = ${kshRate} KSH`);
+        } catch (error) {
+          console.error('Error fetching exchange rate:', error);
+          // Use fallback rate from localStorage or default
+          const savedRate = localStorage.getItem('exchangeRate');
+          setExchangeRate(savedRate ? parseFloat(savedRate) : 110);
+        } finally {
+          setIsLoadingExchangeRate(false);
+        }
+      }
+    };
+
+    fetchExchangeRate();
+  }, [currency]);
 
   const login = async (email, password) => {
     try {
@@ -562,6 +601,22 @@ export const StateContext = ({ children }) => {
     }
   };
 
+  // Function to handle currency change
+  const handleCurrencyChange = () => {
+    const newCurrency = currency === 'USD' ? 'KSH' : 'USD';
+    setCurrency(newCurrency);
+    localStorage.setItem('currency', newCurrency);
+    toast.success(`Currency changed to ${newCurrency}`);
+  };
+
+  // Function to convert price based on current currency
+  const convertPrice = (priceInKSH) => {
+    if (currency === 'USD' && exchangeRate) {
+      return (priceInKSH / exchangeRate).toFixed(2);
+    }
+    return priceInKSH;
+  };
+
   let foundProduct;
 
   const onAdd = (product, quantity) => {
@@ -650,7 +705,11 @@ export const StateContext = ({ children }) => {
         logout,
         isAuthenticated: isAuthenticated,
         authenticatedFetch,
-        sessionId
+        sessionId,
+        currency,
+        handleCurrencyChange,
+        convertPrice,
+        isLoadingExchangeRate
       }}
     >
       {children}

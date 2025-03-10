@@ -1,9 +1,11 @@
 import '../styles/globals.css';
+import '../styles/theme-overrides.css';
+import '../styles/product-details.css';
 import Providers from '../components/Providers';
 
 export const metadata = {
-  title: 'Tuji Beads',
-  description: 'Tuji Beads Application',
+  title: 'Beads Charm Collection',
+  description: 'Beautiful handcrafted beads and accessories',
 };
 
 export default function RootLayout({ children }) {
