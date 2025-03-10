@@ -707,6 +707,7 @@ export const StateContext = ({ children }) => {
         authenticatedFetch,
         sessionId,
         currency,
+        setCurrency,
         handleCurrencyChange,
         convertPrice,
         isLoadingExchangeRate

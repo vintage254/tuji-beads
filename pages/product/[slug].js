@@ -59,7 +59,8 @@ const ProductDetails = ({ product, products }) => {
 
     // Handle WhatsApp negotiation
     const handleNegotiate = () => {
-        const message = `Hello, I'm interested in negotiating the price for ${name} (KSH${price}). Can we discuss?`;
+        const priceText = currency === 'USD' ? `$${convertPrice(price)}` : `KSh ${price}`;
+        const message = `Hello, I'm interested in negotiating the price for ${name} (${priceText}). Can we discuss?`;
         const encodedMessage = encodeURIComponent(message);
         const whatsappUrl = `https://wa.me/+254712345678?text=${encodedMessage}`;
         window.open(whatsappUrl, '_blank');
@@ -149,7 +150,7 @@ const ProductDetails = ({ product, products }) => {
                         </button>
                         {negotiable && (
                             <button type="button" className="negotiate-button" onClick={handleNegotiate}>
-                                <FaWhatsapp /> Negotiate Price
+                                <FaWhatsapp size={18} /> Negotiate Price
                             </button>
                         )}
                     </div>

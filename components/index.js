@@ -15,3 +15,4 @@ export { default as Newsletter } from './Newsletter';
 export { default as WhyChooseUs } from './WhyChooseUs';
 export { default as TrendingProducts } from './TrendingProducts';
 export { default as InstagramFeed } from './InstagramFeed';
+export { default as CurrencyPopup } from './CurrencyPopup';

@@ -71,6 +71,84 @@
   display: inline-block;
 }
 
+/* Currency Popup Styles */
+.currency-popup-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.currency-popup {
+  background-color: white;
+  border-radius: 8px;
+  padding: 24px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+}
+
+.currency-popup-header {
+  text-align: center;
+  margin-bottom: 24px;
+}
+
+.currency-popup-header h2 {
+  font-size: 24px;
+  color: #324d67;
+  margin-bottom: 8px;
+}
+
+.currency-popup-header p {
+  color: #666;
+  font-size: 16px;
+}
+
+.currency-popup-options {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.currency-option {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border: 2px solid #e0e0e0;
+  border-radius: 6px;
+  background-color: white;
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.currency-option:hover {
+  border-color: #f02d34;
+}
+
+.currency-option.selected {
+  border-color: #f02d34;
+  background-color: #fff9f9;
+}
+
+.currency-option span {
+  font-weight: 500;
+}
+
+.currency-popup-footer {
+  text-align: center;
+  color: #888;
+  font-size: 14px;
+}
+
 /* Responsive styles */
 @media screen and (max-width: 800px) {
   .negotiate-button {
@@ -90,5 +168,19 @@
   .product-negotiable-badge {
     font-size: 10px;
     padding: 2px 5px;
+  }
+  
+  .currency-popup {
+    padding: 16px;
+    width: 95%;
+  }
+  
+  .currency-popup-header h2 {
+    font-size: 20px;
+  }
+  
+  .currency-option {
+    padding: 12px;
+    font-size: 16px;
   }
 }
