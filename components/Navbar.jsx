@@ -4,12 +4,14 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { AiOutlineShopping, AiOutlineUser, AiOutlineLogout, AiOutlineMenu, AiOutlineClose } from 'react-icons/ai';
+import { FaDollarSign } from 'react-icons/fa';
+import { TbCurrencyShekel } from 'react-icons/tb';
 import { Cart, Authentication } from './';
 import { useStateContext } from '../context/StateContext';
 import { useRouter } from 'next/navigation';
 
 const Navbar = () => {
-  const { showCart, setShowCart, showAuth, setShowAuth, totalQuantities, user, logout } = useStateContext();
+  const { showCart, setShowCart, showAuth, setShowAuth, totalQuantities, user, logout, currency, handleCurrencyChange } = useStateContext();
   const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [windowWidth, setWindowWidth] = useState(typeof window !== 'undefined' ? window.innerWidth : 0);
@@ -77,6 +79,39 @@ const Navbar = () => {
       }, 100);
     }
   };
+  
+  // Currency toggle button component
+  const CurrencyToggle = ({ isMobile }) => (
+    <button 
+      type="button" 
+      className={isMobile ? "currency-toggle-mobile" : "currency-toggle"}
+      onClick={handleCurrencyChange}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '5px',
+        background: 'none',
+        border: '1px solid #ddd',
+        borderRadius: '4px',
+        fontSize: isMobile ? '16px' : '14px',
+        color: '#333',
+        cursor: 'pointer',
+        padding: isMobile ? '10px 0' : '5px 10px'
+      }}
+    >
+      {currency === 'KSH' ? (
+        <>
+          <TbCurrencyShekel size={isMobile ? 18 : 16} />
+          <span>KSH</span>
+        </>
+      ) : (
+        <>
+          <FaDollarSign size={isMobile ? 18 : 16} />
+          <span>USD</span>
+        </>
+      )}
+    </button>
+  );
   
   return (
     <>
@@ -160,6 +195,7 @@ const Navbar = () => {
         {/* Desktop Nav Buttons - only show on desktop */}
         {!isMobile && (
           <div className="nav-buttons desktop-nav">
+            <CurrencyToggle isMobile={false} />
             {user ? (
               <div className="user-menu">
                 <span className="user-name">
@@ -309,6 +345,14 @@ const Navbar = () => {
                 </Link>
               )}
               
+              {/* Currency Toggle in Mobile Menu */}
+              <div style={{
+                padding: '10px 0',
+                borderBottom: '1px solid #eee'
+              }}>
+                <CurrencyToggle isMobile={true} />
+              </div>
+              
               <div className="mobile-nav-buttons" style={{
                 marginTop: '30px',
                 display: 'flex',
@@ -453,108 +497,146 @@ const Navbar = () => {
           top: 16px;
         }
         
-        .hamburger-icon.open .hamburger-line:nth-child(1) {
-          top: 8px;
-          transform: rotate(135deg);
-        }
-        
-        .hamburger-icon.open .hamburger-line:nth-child(2) {
-          opacity: 0;
-          left: -60px;
-        }
-        
-        .hamburger-icon.open .hamburger-line:nth-child(3) {
-          top: 8px;
-          transform: rotate(-135deg);
-        }
-        
-        /* Mobile Navigation Styles */
+        /* Mobile Nav Styles */
         .mobile-nav {
-          position: fixed;
-          top: 0;
-          left: 0;
-          width: 100%;
-          height: 100vh;
-          background-color: rgba(255, 255, 255, 0.98);
-          z-index: 999;
-          transform: translateX(-100%);
-          transition: transform 0.3s ease-in-out;
-          overflow-y: auto;
+          visibility: ${mobileMenuOpen ? 'visible' : 'hidden'};
+          opacity: ${mobileMenuOpen ? '1' : '0'};
+          transition: visibility 0.3s, opacity 0.3s, transform 0.3s;
         }
         
         .mobile-nav.open {
-          transform: translateX(0);
+          visibility: visible;
+          opacity: 1;
         }
         
-        .mobile-nav-content {
-          padding: 20px;
-          height: 100%;
-          display: flex;
-          flex-direction: column;
-        }
-        
-        .mobile-nav-header {
+        /* Navbar Container Styles */
+        .navbar-container {
           display: flex;
           justify-content: space-between;
           align-items: center;
-          margin-bottom: 30px;
+          padding: 10px 20px;
+          background-color: #fff;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          position: relative;
+          z-index: 100;
+          transition: all 0.3s ease;
         }
         
-        .mobile-close-btn {
-          background: transparent;
-          border: none;
-          cursor: pointer;
-          color: #333;
+        .navbar-container.scrolled {
+          padding: 5px 20px;
+          box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
         
-        .mobile-nav-links {
+        /* Desktop Nav Styles */
+        .desktop-nav {
           display: flex;
-          flex-direction: column;
-          gap: 20px;
+          align-items: center;
         }
         
-        .mobile-nav-links a {
-          font-size: 18px;
-          color: #333;
+        .nav-links a {
+          margin-right: 20px;
+          color: #324d67;
+          font-size: 16px;
           text-decoration: none;
-          padding: 10px 0;
-          border-bottom: 1px solid #eee;
-          transition: color 0.2s;
+          transition: color 0.3s ease;
         }
         
-        .mobile-nav-links a:hover {
-          color: #666;
+        .nav-links a:hover {
+          color: #f02d34;
         }
         
-        .mobile-nav-buttons {
-          margin-top: 30px;
+        .nav-buttons {
           display: flex;
-          flex-direction: column;
+          align-items: center;
           gap: 15px;
         }
         
-        .mobile-nav-buttons button {
+        .auth-button, .logout-button {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 5px;
           background: none;
           border: none;
-          font-size: 16px;
-          color: #333;
           cursor: pointer;
-          padding: 10px 0;
+          font-size: 14px;
+          color: #324d67;
         }
         
-        .user-name-mobile {
+        .auth-button:hover, .logout-button:hover {
+          color: #f02d34;
+        }
+        
+        .user-menu {
           display: flex;
           align-items: center;
-          gap: 10px;
+          gap: 15px;
+        }
+        
+        .user-name {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 14px;
+          color: #324d67;
+        }
+        
+        .cart-icon {
+          font-size: 25px;
+          color: gray;
+          cursor: pointer;
+          position: relative;
+          transition: transform .4s ease;
+          border: none;
+          background-color: transparent;
+        }
+        
+        .cart-icon:hover {
+          transform: scale(1.1,1.1);
+        }
+        
+        .cart-item-qty {
+          position: absolute;
+          right: -8px;
+          top: -8px;
+          font-size: 12px;
+          color: #eee;
+          background-color: #f02d34;
+          width: 18px;
+          height: 18px;
+          border-radius: 50%;
+          text-align: center;
+          font-weight: 600;
+        }
+        
+        /* Currency Toggle Styles */
+        .currency-toggle, .currency-toggle-mobile {
+          display: flex;
+          align-items: center;
+          gap: 5px;
+          background: none;
+          border: 1px solid #ddd;
+          border-radius: 4px;
+          padding: 5px 10px;
+          font-size: 14px;
+          color: #324d67;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        
+        .currency-toggle:hover, .currency-toggle-mobile:hover {
+          border-color: #f02d34;
+          color: #f02d34;
+        }
+        
+        .currency-toggle-mobile {
+          width: 100%;
+          justify-content: center;
+          padding: 8px;
           font-size: 16px;
-          color: #333;
         }
       `}</style>
     </>
-  )
-}
+  );
+};
 
 export default Navbar;
