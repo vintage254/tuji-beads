@@ -188,10 +188,16 @@ const Cart = () => {
 
   // Display price according to selected currency
   const displayPrice = (price) => {
+    if (!price && price !== 0) return currency === 'USD' ? '$0.00' : 'KSh 0.00';
+    
+    const numericPrice = Number(price);
+    if (isNaN(numericPrice)) return currency === 'USD' ? '$0.00' : 'KSh 0.00';
+    
     if (currency === 'USD') {
-      return `$${convertPrice(price)}`;
+      const convertedPrice = convertPrice(numericPrice);
+      return `$${convertedPrice}`;
     }
-    return `KSh ${price}`;
+    return `KSh ${numericPrice.toFixed(2)}`;
   };
 
   return (

@@ -20,11 +20,21 @@ const Product = ({ product }) => {
       return <span className="loading-price">Loading...</span>;
     }
     
-    if (currency === 'USD') {
-      return <span>${convertPrice(price)}</span>;
+    if (!price && price !== 0) {
+      return <span>{currency === 'USD' ? '$0.00' : 'KSh 0.00'}</span>;
     }
     
-    return <span>KSh {price}</span>;
+    const numericPrice = Number(price);
+    if (isNaN(numericPrice)) {
+      return <span>{currency === 'USD' ? '$0.00' : 'KSh 0.00'}</span>;
+    }
+    
+    if (currency === 'USD') {
+      const convertedPrice = convertPrice(numericPrice);
+      return <span>${convertedPrice}</span>;
+    }
+    
+    return <span>KSh {numericPrice.toFixed(2)}</span>;
   };
   
   return (

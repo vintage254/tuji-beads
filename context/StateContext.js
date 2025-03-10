@@ -611,10 +611,15 @@ export const StateContext = ({ children }) => {
 
   // Function to convert price based on current currency
   const convertPrice = (priceInKSH) => {
+    if (!priceInKSH && priceInKSH !== 0) return 0;
+    
+    const numericPrice = Number(priceInKSH);
+    if (isNaN(numericPrice)) return 0;
+    
     if (currency === 'USD' && exchangeRate) {
-      return (priceInKSH / exchangeRate).toFixed(2);
+      return Number((numericPrice / exchangeRate)).toFixed(2);
     }
-    return priceInKSH;
+    return numericPrice;
   };
 
   let foundProduct;
