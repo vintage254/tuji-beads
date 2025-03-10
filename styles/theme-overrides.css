@@ -14,11 +14,11 @@
 }
 
 [data-theme='dark'] .navbar-container a {
-  color: var(--text-color);
+  color: var(--text-color) !important;
 }
 
 [data-theme='dark'] .navbar-container a:hover {
-  color: var(--accent-color);
+  color: var(--accent-color) !important;
 }
 
 /* Product card styling */
@@ -62,50 +62,81 @@
 
 /* Mobile navigation */
 [data-theme='dark'] .mobile-nav {
-  background-color: var(--card-bg-color);
-  box-shadow: -5px 0 20px rgba(0, 0, 0, 0.3);
+  background-color: var(--dark-bg-color) !important;
+  visibility: hidden !important;
+  opacity: 0 !important;
+  transition: visibility 0s, opacity 0.3s ease-in-out, transform 0.3s ease-in-out !important;
+}
+
+[data-theme='dark'] .mobile-nav.open {
+  visibility: visible !important;
+  opacity: 1 !important;
+  display: flex !important;
 }
 
 [data-theme='dark'] .mobile-nav-links a, 
 [data-theme='dark'] .mobile-nav-buttons button {
-  color: var(--text-color);
-  border-bottom: 1px solid var(--border-color);
+  color: var(--dark-text-color) !important;
+  border-bottom: 1px solid var(--dark-border-color) !important;
 }
 
 [data-theme='dark'] .mobile-nav-links a:hover, 
 [data-theme='dark'] .mobile-nav-buttons button:hover {
   background-color: var(--card-hover-bg);
-  color: var(--accent-color);
+  color: var(--accent-color) !important;
 }
 
 [data-theme='dark'] .hamburger-line {
-  background: var(--text-color);
+  background: var(--dark-text-color) !important;
+}
+
+[data-theme='dark'] .mobile-close-btn svg,
+[data-theme='dark'] .mobile-nav-buttons button svg {
+  color: var(--dark-text-color) !important;
 }
 
 /* Ensure icons and buttons are visible in dark mode */
 [data-theme='dark'] .cart-icon,
 [data-theme='dark'] .user-icon,
 [data-theme='dark'] .theme-toggle-icon,
-[data-theme='dark'] .currency-symbol {
-  color: var(--text-color);
+[data-theme='dark'] .currency-symbol,
+[data-theme='dark'] svg,
+[data-theme='dark'] button,
+[data-theme='dark'] .cart-icon svg,
+[data-theme='dark'] .auth-button svg,
+[data-theme='dark'] .theme-toggle-button svg,
+[data-theme='dark'] .currency-toggle-button svg {
+  color: var(--dark-text-color) !important;
+  fill: var(--dark-text-color) !important;
+}
+
+[data-theme='dark'] .hamburger-button span {
+  background-color: var(--dark-text-color) !important;
 }
 
 /* Ensure mobile menu toggle buttons are visible */
-[data-theme='dark'] .theme-toggle-button-mobile,
-[data-theme='dark'] .currency-toggle-button-mobile {
-  color: var(--text-color);
+[data-theme='dark'] .theme-toggle-button,
+[data-theme='dark'] .currency-toggle-button,
+[data-theme='dark'] .auth-button,
+[data-theme='dark'] .cart-icon,
+[data-theme='dark'] .mobile-menu-toggle button {
+  color: var(--dark-text-color) !important;
+  background-color: transparent !important;
 }
 
-[data-theme='dark'] .theme-toggle-button-mobile svg,
-[data-theme='dark'] .currency-toggle-button-mobile svg {
-  color: var(--text-color);
+[data-theme='dark'] .theme-toggle-button svg,
+[data-theme='dark'] .currency-toggle-button svg,
+[data-theme='dark'] .auth-button svg,
+[data-theme='dark'] .cart-icon svg,
+[data-theme='dark'] .hamburger-button span {
+  color: var(--dark-text-color) !important;
+  background-color: var(--dark-text-color) !important;
+  fill: var(--dark-text-color) !important;
 }
 
-/* Ensure quantity controls are visible */
-[data-theme='dark'] .quantity-desc .minus,
-[data-theme='dark'] .quantity-desc .num,
-[data-theme='dark'] .quantity-desc .plus {
-  color: var(--text-color);
+/* Hamburger menu lines in dark mode */
+[data-theme='dark'] .hamburger-button span {
+  background-color: var(--dark-text-color) !important;
 }
 
 /* Footer styling */
@@ -550,4 +581,11 @@
 
 [data-theme='dark'] .auth-switch {
   color: var(--accent-color);
+}
+
+/* Dark Theme Variables */
+:root {
+  --dark-bg-color: #1e1e24;
+  --dark-text-color: #ffffff;
+  --dark-border-color: #3a3a46;
 }

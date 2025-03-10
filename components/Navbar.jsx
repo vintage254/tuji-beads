@@ -73,6 +73,12 @@ const Navbar = () => {
     setCurrency(newCurrency);
   };
 
+  // Define text and icon colors based on theme
+  const textColor = theme === 'dark' ? '#ffffff' : '#333333';
+  const iconColor = theme === 'dark' ? '#ffffff' : '#333333';
+  const hamburgerColor = theme === 'dark' ? '#ffffff' : '#333333';
+  const darkBgColor = '#1e1e24'; // Consistent dark theme background color
+
   return (
     <>
       <div className={`navbar-container ${scrolled ? 'scrolled' : ''}`}>
@@ -115,7 +121,7 @@ const Navbar = () => {
                 display: 'block',
                 width: '24px',
                 height: '3px',
-                backgroundColor: theme === 'dark' ? '#e0e0e0' : '#333',
+                backgroundColor: hamburgerColor,
                 marginBottom: '5px',
                 borderRadius: '2px'
               }}></span>
@@ -123,7 +129,7 @@ const Navbar = () => {
                 display: 'block',
                 width: '24px',
                 height: '3px',
-                backgroundColor: theme === 'dark' ? '#e0e0e0' : '#333',
+                backgroundColor: hamburgerColor,
                 marginBottom: '5px',
                 borderRadius: '2px'
               }}></span>
@@ -131,7 +137,7 @@ const Navbar = () => {
                 display: 'block',
                 width: '24px',
                 height: '3px',
-                backgroundColor: theme === 'dark' ? '#e0e0e0' : '#333',
+                backgroundColor: hamburgerColor,
                 borderRadius: '2px'
               }}></span>
             </button>
@@ -142,11 +148,11 @@ const Navbar = () => {
         {!isMobile && (
           <div className="nav-links desktop-nav">
             <div style={{ display: 'flex', gap: '15px' }}>
-              <Link href="/">Home</Link>
-              <Link href="/products">Products</Link>
-              <Link href="/about">About Us</Link>
+              <Link href="/" style={{ color: textColor }}>Home</Link>
+              <Link href="/products" style={{ color: textColor }}>Products</Link>
+              <Link href="/about" style={{ color: textColor }}>About Us</Link>
               {user && (
-                <Link href="/order-history">Order History</Link>
+                <Link href="/order-history" style={{ color: textColor }}>Order History</Link>
               )}
             </div>
           </div>
@@ -161,11 +167,12 @@ const Navbar = () => {
               className="theme-toggle-button" 
               onClick={toggleTheme}
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
             >
               {theme === 'dark' ? (
-                <FiSun style={{ color: '#e0e0e0' }} />
+                <FiSun size={20} style={{ color: '#ffffff' }} />
               ) : (
-                <FiMoon style={{ color: '#333' }} />
+                <FiMoon size={20} style={{ color: '#333333' }} />
               )}
             </button>
             
@@ -175,8 +182,9 @@ const Navbar = () => {
               className="currency-toggle-button" 
               onClick={handleCurrencyChange}
               disabled={isLoadingExchangeRate}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
             >
-              <span style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }}>
+              <span style={{ color: textColor, fontWeight: 'bold', fontSize: '16px' }}>
                 {currency === 'USD' ? '$' : 'KSh'}
               </span>
               {isLoadingExchangeRate && <span className="loading-dot"></span>}
@@ -185,8 +193,8 @@ const Navbar = () => {
             {user ? (
               <div className="user-menu">
                 <span className="user-name">
-                  <AiOutlineUser style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
-                  <span className="user-name-text" style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }}>
+                  <AiOutlineUser size={20} style={{ color: iconColor }} />
+                  <span className="user-name-text" style={{ color: textColor }}>
                     {user.name || user.email}
                   </span>
                 </span>
@@ -197,19 +205,30 @@ const Navbar = () => {
                     logout();
                     router.push('/');
                   }}
+                  style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
                 >
-                  <AiOutlineLogout style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
-                  <span style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }}>Logout</span>
+                  <AiOutlineLogout size={20} style={{ color: iconColor }} />
+                  <span style={{ color: textColor }}>Logout</span>
                 </button>
               </div>
             ) : (
-              <button type="button" className="auth-button" onClick={handleSignIn}>
-                <AiOutlineUser style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
-                <span style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }}>Sign In</span>
+              <button 
+                type="button" 
+                className="auth-button" 
+                onClick={handleSignIn}
+                style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}
+              >
+                <AiOutlineUser size={20} style={{ color: iconColor }} />
+                <span style={{ color: textColor }}>Sign In</span>
               </button>
             )}
-            <button type="button" className="cart-icon" onClick={() => setShowCart(true)}>
-              <AiOutlineShopping style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+            <button 
+              type="button" 
+              className="cart-icon" 
+              onClick={() => setShowCart(true)}
+              style={{ background: 'transparent', border: 'none', cursor: 'pointer', position: 'relative' }}
+            >
+              <AiOutlineShopping size={25} style={{ color: iconColor }} />
               <span className="cart-item-qty">{totalQuantities || 0}</span>
             </button>
           </div>
@@ -238,7 +257,7 @@ const Navbar = () => {
                 position: 'relative'
               }}
             >
-              <AiOutlineShopping size={25} style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+              <AiOutlineShopping size={25} style={{ color: iconColor }} />
               {totalQuantities > 0 && (
                 <span className="cart-item-qty" style={{
                   position: 'absolute',
@@ -273,11 +292,11 @@ const Navbar = () => {
               left: 0,
               width: '100%',
               height: '100vh',
-              backgroundColor: theme === 'dark' ? '#1e1e24' : 'rgba(255, 255, 255, 0.98)',
+              backgroundColor: theme === 'dark' ? darkBgColor : 'rgba(255, 255, 255, 0.98)',
               zIndex: 1000,
               transform: mobileMenuOpen ? 'translateX(0)' : 'translateX(-100%)',
               transition: 'transform 0.3s ease-in-out',
-              display: 'flex',
+              display: mobileMenuOpen ? 'flex' : 'none', // Hide completely when closed
               flexDirection: 'column',
               padding: '20px',
               boxShadow: mobileMenuOpen ? '0 0 10px rgba(0,0,0,0.1)' : 'none',
@@ -305,7 +324,7 @@ const Navbar = () => {
                     fontSize: '24px'
                   }}
                 >
-                  <AiOutlineClose size={24} style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                  <AiOutlineClose size={24} style={{ color: '#ffffff' }} />
                 </button>
               </div>
               <div className="mobile-nav-links" style={{
@@ -318,10 +337,10 @@ const Navbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   style={{
                     fontSize: '18px',
-                    color: theme === 'dark' ? '#e0e0e0' : '#333',
+                    color: '#ffffff',
                     textDecoration: 'none',
                     padding: '10px 0',
-                    borderBottom: '1px solid #eee'
+                    borderBottom: '1px solid #3a3a46'
                   }}
                 >
                   Home
@@ -331,10 +350,10 @@ const Navbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   style={{
                     fontSize: '18px',
-                    color: theme === 'dark' ? '#e0e0e0' : '#333',
+                    color: '#ffffff',
                     textDecoration: 'none',
                     padding: '10px 0',
-                    borderBottom: '1px solid #eee'
+                    borderBottom: '1px solid #3a3a46'
                   }}
                 >
                   Products
@@ -344,10 +363,10 @@ const Navbar = () => {
                   onClick={() => setMobileMenuOpen(false)}
                   style={{
                     fontSize: '18px',
-                    color: theme === 'dark' ? '#e0e0e0' : '#333',
+                    color: '#ffffff',
                     textDecoration: 'none',
                     padding: '10px 0',
-                    borderBottom: '1px solid #eee'
+                    borderBottom: '1px solid #3a3a46'
                   }}
                 >
                   About Us
@@ -358,10 +377,10 @@ const Navbar = () => {
                     onClick={() => setMobileMenuOpen(false)}
                     style={{
                       fontSize: '18px',
-                      color: theme === 'dark' ? '#e0e0e0' : '#333',
+                      color: '#ffffff',
                       textDecoration: 'none',
                       padding: '10px 0',
-                      borderBottom: '1px solid #eee'
+                      borderBottom: '1px solid #3a3a46'
                     }}
                   >
                     Order History
@@ -387,19 +406,19 @@ const Navbar = () => {
                     background: 'none',
                     border: 'none',
                     fontSize: '16px',
-                    color: theme === 'dark' ? '#e0e0e0' : '#333',
+                    color: '#ffffff',
                     cursor: 'pointer',
                     padding: '10px 0'
                   }}
                 >
                   {theme === 'dark' ? (
                     <>
-                      <FiSun style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                      <FiSun size={20} style={{ color: '#ffffff' }} />
                       <span>Light Theme</span>
                     </>
                   ) : (
                     <>
-                      <FiMoon style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                      <FiMoon size={20} style={{ color: '#ffffff' }} />
                       <span>Dark Theme</span>
                     </>
                   )}
@@ -418,12 +437,12 @@ const Navbar = () => {
                     background: 'none',
                     border: 'none',
                     fontSize: '16px',
-                    color: theme === 'dark' ? '#e0e0e0' : '#333',
+                    color: '#ffffff',
                     cursor: 'pointer',
                     padding: '10px 0'
                   }}
                 >
-                  <FaExchangeAlt style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                  <FaExchangeAlt size={20} style={{ color: '#ffffff' }} />
                   <span>
                     {currency === 'USD' ? 'Switch to KSh' : 'Switch to $'}
                   </span>
@@ -438,10 +457,10 @@ const Navbar = () => {
                       alignItems: 'center',
                       gap: '10px',
                       fontSize: '16px',
-                      color: theme === 'dark' ? '#e0e0e0' : '#333'
+                      color: '#ffffff'
                     }}>
                       <span className="user-name-mobile">
-                        <AiOutlineUser style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                        <AiOutlineUser size={20} style={{ color: '#ffffff' }} />
                         <span style={{ marginLeft: '5px' }}>{user.name || user.email}</span>
                       </span>
                     </div>
@@ -459,12 +478,12 @@ const Navbar = () => {
                         background: 'none',
                         border: 'none',
                         fontSize: '16px',
-                        color: theme === 'dark' ? '#e0e0e0' : '#333',
+                        color: '#ffffff',
                         cursor: 'pointer',
                         padding: '10px 0'
                       }}
                     >
-                      <AiOutlineLogout style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                      <AiOutlineLogout size={20} style={{ color: '#ffffff' }} />
                       <span>Logout</span>
                     </button>
                   </>
@@ -479,12 +498,12 @@ const Navbar = () => {
                       background: 'none',
                       border: 'none',
                       fontSize: '16px',
-                      color: theme === 'dark' ? '#e0e0e0' : '#333',
+                      color: '#ffffff',
                       cursor: 'pointer',
                       padding: '10px 0'
                     }}
                   >
-                    <AiOutlineUser style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                    <AiOutlineUser size={20} style={{ color: '#ffffff' }} />
                     <span>Sign In</span>
                   </button>
                 )}
@@ -503,12 +522,12 @@ const Navbar = () => {
                     background: 'none',
                     border: 'none',
                     fontSize: '16px',
-                    color: theme === 'dark' ? '#e0e0e0' : '#333',
+                    color: '#ffffff',
                     cursor: 'pointer',
                     padding: '10px 0'
                   }}
                 >
-                  <AiOutlineShopping style={{ color: theme === 'dark' ? '#e0e0e0' : '#333' }} />
+                  <AiOutlineShopping size={20} style={{ color: '#ffffff' }} />
                   <span>Cart ({totalQuantities || 0})</span>
                 </button>
               </div>
