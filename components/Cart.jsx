@@ -15,7 +15,21 @@ const Cart = () => {
   const cartRef = React.useRef();
   const router = useRouter();
   const pathname = usePathname();
-  const { totalPrice, totalQuantities, cartItems, setShowCart, toggleCartItemQuantity, onRemove, setCartItems, setTotalPrice, setTotalQuantities, authenticatedFetch, isAuthenticated } = useStateContext();
+  const { 
+    totalPrice, 
+    totalQuantities, 
+    cartItems, 
+    setShowCart, 
+    toggleCartItemQuantity, 
+    onRemove, 
+    setCartItems, 
+    setTotalPrice, 
+    setTotalQuantities, 
+    authenticatedFetch, 
+    isAuthenticated,
+    currency,
+    convertPrice
+  } = useStateContext();
 
   const { user, setShowAuth } = useStateContext();
   
@@ -72,9 +86,11 @@ const Cart = () => {
           items: cartItems.map(item => ({
             productId: item._id,
             quantity: item.quantity,
-            price: item.price
+            price: item.price,
+            currency: currency
           })),
           totalAmount: totalPrice,
+          currency: currency,
           // Include both user ID and email for more robust identification
           userId: user._id,
           email: user.email
@@ -150,24 +166,32 @@ const Cart = () => {
       
       // Restore cart from localStorage if available
       try {
-        const savedCart = localStorage.getItem('cartItems');
-        if (savedCart && cartItems.length === 0) {
-          const parsedCart = JSON.parse(savedCart);
-          setCartItems(parsedCart);
-          
-          // Recalculate totals
-          const totalPrice = parsedCart.reduce((total, item) => total + (item.price * item.quantity), 0);
-          const totalQuantities = parsedCart.reduce((total, item) => total + item.quantity, 0);
-          
-          setTotalPrice(totalPrice);
-          setTotalQuantities(totalQuantities);
-          
-          console.log('Restored cart from localStorage after order failure');
+        const storedCart = localStorage.getItem('cartItems');
+        if (storedCart) {
+          const parsedCart = JSON.parse(storedCart);
+          if (parsedCart.length > 0 && cartItems.length === 0) {
+            setCartItems(parsedCart);
+            
+            // Recalculate totals
+            const total = parsedCart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const qty = parsedCart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            setTotalPrice(total);
+            setTotalQuantities(qty);
+          }
         }
-      } catch (restoreError) {
-        console.error('Failed to restore cart from localStorage:', restoreError);
+      } catch (e) {
+        console.error('Error restoring cart from localStorage:', e);
       }
     }
+  };
+
+  // Display price according to selected currency
+  const displayPrice = (price) => {
+    if (currency === 'USD') {
+      return `$${convertPrice(price)}`;
+    }
+    return `KSh ${price}`;
   };
 
   return (
@@ -193,9 +217,13 @@ const Cart = () => {
         </div>
       )}
       <div className="cart-container">
-        <button type='button' className='cart-heading' onClick={() => setShowCart(false)}>
+        <button
+          type="button"
+          className="cart-heading"
+          onClick={() => setShowCart(false)}
+        >
           <AiOutlineLeft />
-          <span className='heading'>Your cart</span>
+          <span className="heading">Your Cart</span>
           <span className="cart-num-items">({totalQuantities} items)</span>
         </button>
 
@@ -230,7 +258,7 @@ const Cart = () => {
               <div className="item-desc">
                 <div className="flex top">
                   <h5>{item.name}</h5>
-                  <h4>KSH {item.price}</h4>
+                  <h4>{displayPrice(item.price)}</h4>
                 </div>
                 <div className="flex bottom">
                   <div>
@@ -261,7 +289,7 @@ const Cart = () => {
           <div className="cart-bottom">
             <div className="total">
               <h3>Subtotal:</h3>
-              <h3>KSH {totalPrice}</h3>
+              <h3>{displayPrice(totalPrice)}</h3>
             </div>
             <div className="payment-container">
               <button 

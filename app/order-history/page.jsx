@@ -27,7 +27,15 @@ function OrderHistoryClient() {
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
   const router = useRouter();
-  const { isAuthenticated, authenticatedFetch } = useStateContext();
+  const { isAuthenticated, authenticatedFetch, currency, convertPrice } = useStateContext();
+
+  // Display price according to selected currency
+  const displayPrice = (price) => {
+    if (currency === 'USD') {
+      return `$${convertPrice(price).toFixed(2)}`;
+    }
+    return `KSh ${price.toFixed(2)}`;
+  };
 
   useEffect(() => {
     // Check if we're in the browser environment
@@ -331,7 +339,7 @@ function OrderHistoryClient() {
                 </div>
                 <div style={{ textAlign: 'right' }}>
                   <p style={{ margin: '0', fontWeight: 'bold' }}>
-                    ${(item.product.price * item.quantity).toFixed(2)}
+                    {displayPrice(item.product.price * item.quantity)}
                   </p>
                 </div>
               </div>
@@ -348,7 +356,7 @@ function OrderHistoryClient() {
                 fontSize: '18px', 
                 fontWeight: 'bold' 
               }}>
-                Total: ${order.total.toFixed(2)}
+                Total: {displayPrice(order.total)}
               </p>
             </div>
           </div>
