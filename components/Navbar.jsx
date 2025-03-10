@@ -6,6 +6,7 @@ import Image from 'next/image';
 import { AiOutlineShopping, AiOutlineUser, AiOutlineLogout, AiOutlineMenu, AiOutlineClose, AiOutlineLogin } from 'react-icons/ai';
 import { BsSun, BsMoon } from 'react-icons/bs';
 import { FaExchangeAlt } from 'react-icons/fa';
+import { FiSun, FiMoon } from 'react-icons/fi';
 import { Cart, Authentication } from './';
 import { useStateContext } from '../context/StateContext';
 import { useRouter } from 'next/navigation';
@@ -175,19 +176,12 @@ const Navbar = () => {
               className="theme-toggle-button" 
               onClick={toggleTheme}
               aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '20px',
-                color: '#333',
-                marginRight: '10px'
-              }}
             >
-              {theme === 'light' ? <BsMoon /> : <BsSun />}
+              {theme === 'dark' ? (
+                <FiSun className="theme-toggle-icon" />
+              ) : (
+                <FiMoon className="theme-toggle-icon" />
+              )}
             </button>
             
             {/* Currency Display */}
@@ -196,17 +190,6 @@ const Navbar = () => {
               className="currency-toggle-button" 
               onClick={handleCurrencyChange}
               disabled={isLoadingExchangeRate}
-              style={{
-                background: 'none',
-                border: 'none',
-                cursor: 'pointer',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: '20px',
-                color: '#333',
-                marginRight: '10px'
-              }}
             >
               <span className="currency-symbol">{currency === 'USD' ? '$' : 'KSh'}</span>
               {isLoadingExchangeRate && <span className="loading-dot"></span>}
@@ -398,66 +381,36 @@ const Navbar = () => {
                 gap: '15px'
               }}>
                 {/* Theme Toggle Button in Mobile Menu */}
-                <div className="theme-toggle-mobile-menu" style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 0',
-                  borderBottom: '1px solid #eee'
-                }}>
-                  <span>Theme</span>
-                  <button 
-                    type="button" 
-                    className="theme-toggle-button-mobile" 
-                    onClick={toggleTheme}
-                    aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} mode`}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '20px',
-                      color: '#333',
-                      padding: '5px'
-                    }}
-                  >
-                    {theme === 'light' ? <BsMoon /> : <BsSun />}
-                  </button>
-                </div>
+                <button 
+                  type="button" 
+                  className="theme-toggle-button-mobile" 
+                  onClick={toggleTheme}
+                >
+                  {theme === 'dark' ? (
+                    <>
+                      <FiSun className="theme-toggle-icon" />
+                      <span>Light Theme</span>
+                    </>
+                  ) : (
+                    <>
+                      <FiMoon className="theme-toggle-icon" />
+                      <span>Dark Theme</span>
+                    </>
+                  )}
+                </button>
                 
                 {/* Currency Toggle Button in Mobile Menu */}
-                <div className="currency-toggle-mobile-menu" style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'space-between',
-                  padding: '10px 0',
-                  borderBottom: '1px solid #eee'
-                }}>
-                  <span>Currency</span>
-                  <button 
-                    type="button" 
-                    className="currency-toggle-button-mobile" 
-                    onClick={handleCurrencyChange}
-                    disabled={isLoadingExchangeRate}
-                    style={{
-                      background: 'none',
-                      border: 'none',
-                      cursor: 'pointer',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      fontSize: '16px',
-                      color: '#333',
-                      padding: '5px',
-                      position: 'relative'
-                    }}
-                  >
-                    <span className="currency-symbol">{currency === 'USD' ? '$' : 'KSh'}</span>
-                    {isLoadingExchangeRate && <span className="loading-dot"></span>}
-                  </button>
-                </div>
+                <button 
+                  type="button" 
+                  className="currency-toggle-button-mobile" 
+                  onClick={handleCurrencyChange}
+                  disabled={isLoadingExchangeRate}
+                >
+                  <span className="currency-symbol">
+                    {currency === 'USD' ? 'Switch to KSh' : 'Switch to $'}
+                  </span>
+                  {isLoadingExchangeRate && <span className="loading-dot"></span>}
+                </button>
                 
                 {user ? (
                   <>

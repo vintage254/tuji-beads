@@ -82,6 +82,32 @@
   background: var(--text-color);
 }
 
+/* Ensure icons and buttons are visible in dark mode */
+[data-theme='dark'] .cart-icon,
+[data-theme='dark'] .user-icon,
+[data-theme='dark'] .theme-toggle-icon,
+[data-theme='dark'] .currency-symbol {
+  color: var(--text-color);
+}
+
+/* Ensure mobile menu toggle buttons are visible */
+[data-theme='dark'] .theme-toggle-button-mobile,
+[data-theme='dark'] .currency-toggle-button-mobile {
+  color: var(--text-color);
+}
+
+[data-theme='dark'] .theme-toggle-button-mobile svg,
+[data-theme='dark'] .currency-toggle-button-mobile svg {
+  color: var(--text-color);
+}
+
+/* Ensure quantity controls are visible */
+[data-theme='dark'] .quantity-desc .minus,
+[data-theme='dark'] .quantity-desc .num,
+[data-theme='dark'] .quantity-desc .plus {
+  color: var(--text-color);
+}
+
 /* Footer styling */
 [data-theme='dark'] .footer-container {
   background-color: var(--nav-bg);
@@ -313,6 +339,17 @@
 
 [data-theme='dark'] .buttons .buy-now {
   background-color: var(--button-bg-color);
+}
+
+/* Product details page improvements */
+[data-theme='dark'] .product-detail-desc .buttons .add-to-cart {
+  color: var(--text-color);
+  border: 1px solid var(--border-color);
+  background-color: var(--card-hover-bg);
+}
+
+[data-theme='dark'] .product-detail-desc .buttons .add-to-cart:hover {
+  background-color: var(--subtle-accent);
 }
 
 /* Related products section */
